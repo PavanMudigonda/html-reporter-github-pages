@@ -15,7 +15,6 @@ jobs:
       - name: List Files in workspace
         if: always()
         run: |
-          mv ./html-report/* test-results;
           ls -R;
 
       - name: Get Test Results history
