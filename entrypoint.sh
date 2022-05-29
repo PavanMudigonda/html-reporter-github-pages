@@ -43,21 +43,22 @@ echo "<meta http-equiv=\"Pragma\" content=\"no-cache\"><meta http-equiv=\"Expire
 #cat ./${INPUT_TEST_RESULTS}/index.html
 
 #echo "executor.json"
-echo '{"name":"GitHub Actions","type":"github","reportName":"playwright test results with history",' > executor.json
+echo '{"name":"GitHub Actions","type":"github","reportName":"Allure Report with history",' > executor.json
 echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
 echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${INPUT_GITHUB_RUN_NUM}/\"," >> executor.json
 echo "\"buildUrl\":\"https://github.com/${INPUT_GITHUB_REPO}/actions/runs/${INPUT_GITHUB_RUN_ID}\"," >> executor.json
 echo "\"buildName\":\"GitHub Actions Run #${INPUT_GITHUB_RUN_ID}\",\"buildOrder\":\"${INPUT_GITHUB_RUN_NUM}\"}" >> executor.json
+#cat executor.json
+mv ./executor.json ./${INPUT_TEST_RESULTS}
 
 #environment.properties
-echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> ./${TEST_RESULTS}/environment.properties
+echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> ./${INPUT_TEST_RESULTS}/environment.properties
 
-echo "keep test results history from ${INPUT_GH_PAGES}/last-history to ${TEST_RESULTS}/history"
-cp -r ./${INPUT_GH_PAGES}/last-history/. ./${TEST_RESULTS}/history
+echo "keep test results history from ${INPUT_GH_PAGES}/last-history to ${INPUT_TEST_RESULTS}/history"
+cp -r ./${INPUT_GH_PAGES}/last-history/. ./${INPUT_TEST_RESULTS}/history
 
 
-echo "copy test-results to ${INPUT_TEST_RESULTS}/${INPUT_GITHUB_RUN_NUM}"
-
-# cp -r ./${INPUT_ALLURE_REPORT}/. ./${INPUT_TEST_RESULTS}/${INPUT_GITHUB_RUN_NUM}
-echo "copy test-results history to /${INPUT_TEST_RESULTS}/last-history"
-cp -r ./history/. ./${INPUT_TEST_RESULTS}/last-history
+echo "copy allure-report to ${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
+cp -r ./${INPUT_TEST_RESULTS}/. ./${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}
+echo "copy test results history to /${INPUT_TEST_RESULTS_HISTORY}/last-history"
+cp -r ./${INPUT_TEST_RESULTS}/history/. ./${INPUT_TEST_RESULTS_HISTORY}/last-history
