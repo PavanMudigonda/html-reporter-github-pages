@@ -58,7 +58,7 @@ echo "keep test results history from ${INPUT_GH_PAGES}/last-history to ${INPUT_T
 cp -r ./${INPUT_GH_PAGES}/last-history/. ./${INPUT_TEST_RESULTS}/history
 
 
-# echo "copy allure-report to ${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
-# cp -r ./${INPUT_TEST_RESULTS}/. ./${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}
-# echo "copy test results history to /${INPUT_TEST_RESULTS_HISTORY}/last-history"
-# cp -r ./${INPUT_TEST_RESULTS}/history/. ./${INPUT_TEST_RESULTS_HISTORY}/last-history
+echo "copy allure-report to ${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
+cp -r ./${INPUT_TEST_RESULTS}/. ./${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}
+echo "copy test results history to /${INPUT_TEST_RESULTS_HISTORY}/last-history"
+cp -r ./${INPUT_TEST_RESULTS}/history/. ./${INPUT_TEST_RESULTS_HISTORY}/last-history
