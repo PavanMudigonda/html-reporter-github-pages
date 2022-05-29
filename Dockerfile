@@ -1,9 +1,10 @@
 FROM alpine:latest
 
-RUN echo $RELEASE && \
-    apk update && \
+RUN apk update && \
     apk add --no-cache bash wget unzip && \
     rm -rf /var/cache/apk/*
+
+ENV ROOT=/app
 
 RUN mkdir -p $ROOT
 
