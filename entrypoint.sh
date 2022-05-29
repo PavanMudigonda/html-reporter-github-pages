@@ -46,7 +46,7 @@ echo "<meta http-equiv=\"Pragma\" content=\"no-cache\"><meta http-equiv=\"Expire
 #cat ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
 
 #echo "executor.json"
-echo '{"name":"GitHub Actions","type":"github","reportName":"Allure Report with history",' > executor.json
+echo '{"name":"GitHub Actions","type":"github","reportName":"Playwright Report with history",' > executor.json
 echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
 echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${INPUT_GITHUB_RUN_NUM}/\"," >> executor.json
 echo "\"buildUrl\":\"https://github.com/${INPUT_GITHUB_REPO}/actions/runs/${INPUT_GITHUB_RUN_ID}\"," >> executor.json
@@ -57,7 +57,7 @@ mv ./executor.json ./${INPUT_PLAYWRIGHT_RESULTS}
 #environment.properties
 echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> ./${INPUT_PLAYWRIGHT_RESULTS}/environment.properties
 
-echo "keep allure history from ${INPUT_GH_PAGES}/last-history to ${INPUT_PLAYWRIGHT_RESULTS}/history"
+echo "keep playwright history from ${INPUT_GH_PAGES}/last-history to ${INPUT_PLAYWRIGHT_RESULTS}/history"
 cp -r ./${INPUT_GH_PAGES}/last-history/. ./${INPUT_PLAYWRIGHT_RESULTS}/history
 
 
@@ -65,7 +65,7 @@ echo "generating report from ${INPUT_PLAYWRIGHT_RESULTS} to ${INPUT_PLAYWRIGHT_R
 ls -l ${INPUT_PLAYWRIGHT_RESULTS}
 #echo "listing report directory ..."
 
-echo "copy allure-report to ${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
+echo "copy playwright-results to ${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
 cp -r ./${INPUT_PLAYWRIGHT_RESULTS}/. ./${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}
-echo "copy allure-report history to /${INPUT_PLAYWRIGHT_HISTORY}/last-history"
+echo "copy playwright-results history to /${INPUT_PLAYWRIGHT_HISTORY}/last-history"
 cp -r ./${INPUT_PLAYWRIGHT_RESULTS}/history/. ./${INPUT_PLAYWRIGHT_HISTORY}/last-history

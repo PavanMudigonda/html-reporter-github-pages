@@ -9,10 +9,6 @@ inputs:
     description: 'Playwright test result data dir'
     required: true
     default: 'test-results'
-  playwright_report:
-    description: 'Allure report target dir'
-    required: true
-    default: 'test-results'
   gh_pages:
     description: 'Folder with gh-pages branch'
     required: true
