@@ -60,8 +60,8 @@ ls -R;
 
 ls -l ${INPUT_TEST_RESULTS}
 
-echo "copy test-results to ${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
-cp -r ./${INPUT_TEST_RESULTS}/. ./${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}
-echo "copy test results history to /${INPUT_TEST_RESULTS_HISTORY}/last-history"
-cp -r ./${INPUT_TEST_RESULTS}/history/. ./${INPUT_TEST_RESULTS_HISTORY}/last-history
-ls -R;
+# echo "copy test-results to ${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
+# cp -r ./${INPUT_TEST_RESULTS}/. ./${INPUT_TEST_RESULTS_HISTORY}/${INPUT_GITHUB_RUN_NUM}
+# echo "copy test results history to /${INPUT_TEST_RESULTS_HISTORY}/last-history"
+# cp -r ./${INPUT_TEST_RESULTS}/history/. ./${INPUT_TEST_RESULTS_HISTORY}/last-history
+# ls -R;
