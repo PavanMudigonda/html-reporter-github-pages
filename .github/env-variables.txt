@@ -1,2 +1,0 @@
-DD_ENV=ci
-DD_SERVICE=my-javascript-app
