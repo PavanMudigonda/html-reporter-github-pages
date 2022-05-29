@@ -1,8 +1,8 @@
 FROM ubuntu
 
-RUN apk update && \
-    apk add --no-cache bash wget unzip && \
-    rm -rf /var/cache/apk/* \
+RUN apt update && \
+    apt add --no-cache bash wget unzip && \
+    rm -rf /var/cache/apt/* \
     apt reinstall runc
 
 ENV ROOT=/app
