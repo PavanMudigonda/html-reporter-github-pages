@@ -17,13 +17,13 @@ jobs:
         run: |
           ls -R;
 
-      - name: Get Test Results history
-        uses: actions/checkout@v2
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+      # - name: Get Test Results history
+      #   uses: actions/checkout@v3
+      #   if: always()
+      #   continue-on-error: true
+      #   # with:
+      #   #   ref: gh-pages
+      #   #   path: gh-pages
 
       - name: Create Playwright Test Results History
         uses: PavanMudigonda/playwright-github-pages@v0.1
