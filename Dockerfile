@@ -1,7 +1,6 @@
 FROM ubuntu
 
-RUN apt update && \
-    apt reinstall runc
+RUN apt update
 
 ENV ROOT=/app
 
