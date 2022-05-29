@@ -55,7 +55,9 @@ mv ./executor.json ./${INPUT_PLAYWRIGHT_RESULTS}
 #environment.properties
 echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> ./${INPUT_PLAYWRIGHT_RESULTS}/environment.properties
 
+
 echo "keep playwright history from ${INPUT_GH_PAGES}/last-history to ${INPUT_PLAYWRIGHT_RESULTS}/history"
+mkdir -p ${INPUT_PLAYWRIGHT_RESULTS}/history
 cp -R ./${INPUT_GH_PAGES}/last-history/. ./${INPUT_PLAYWRIGHT_RESULTS}/history
 
 
