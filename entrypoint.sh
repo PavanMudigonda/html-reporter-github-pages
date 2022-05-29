@@ -56,7 +56,7 @@ mv ./executor.json ./${INPUT_PLAYWRIGHT_RESULTS}
 echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> ./${INPUT_PLAYWRIGHT_RESULTS}/environment.properties
 
 echo "keep playwright history from ${INPUT_GH_PAGES}/last-history to ${INPUT_PLAYWRIGHT_RESULTS}/history"
-cp -r ./${INPUT_GH_PAGES}/last-history/. ./${INPUT_PLAYWRIGHT_RESULTS}/history
+cp -R ./${INPUT_GH_PAGES}/last-history/. ./${INPUT_PLAYWRIGHT_RESULTS}/history
 
 
 echo "generating report from ${INPUT_PLAYWRIGHT_RESULTS} to ${INPUT_PLAYWRIGHT_REPORT} ..."
@@ -64,6 +64,6 @@ ls -l ${INPUT_PLAYWRIGHT_RESULTS}
 #echo "listing report directory ..."
 
 echo "copy playwright-results to ${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
-cp -r ./${INPUT_PLAYWRIGHT_RESULTS}/. ./${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}
+cp -R ./${INPUT_PLAYWRIGHT_RESULTS}/. ./${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}
 echo "copy playwright-results history to /${INPUT_PLAYWRIGHT_HISTORY}/last-history"
-cp -r ./${INPUT_PLAYWRIGHT_RESULTS}/history/. ./${INPUT_PLAYWRIGHT_HISTORY}/last-history
+cp -R ./${INPUT_PLAYWRIGHT_RESULTS}/history/. ./${INPUT_PLAYWRIGHT_HISTORY}/last-history
