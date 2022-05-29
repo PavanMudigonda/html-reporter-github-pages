@@ -17,7 +17,7 @@ inputs:
     description: 'Folder with gh-pages branch'
     required: true
     default: 'gh-pages'
-  allure_history:
+  playwright_history:
     description: 'Folder for allure history'
     required: true
     default: 'allure-history'
