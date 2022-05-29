@@ -27,6 +27,7 @@ jobs:
 
       - name: Create Playwright Test Results History
         uses: PavanMudigonda/playwright-github-pages@v0.1
+        if: always()        
         id: test-report
         with:
           test_results: test-results
