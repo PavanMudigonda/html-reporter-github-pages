@@ -2,7 +2,7 @@
 
 mkdir -p ./${INPUT_GH_PAGES}
 mkdir -p ./${INPUT_TEST_RESULTS_HISTORY}
-cp -r ./${INPUT_GH_PAGES}/. ./${INPUT_TEST_RESULTS}
+cp -r ./${INPUT_GH_PAGES}/. ./${INPUT_TEST_RESULTS_HISTORY}
 
 REPOSITORY_OWNER_SLASH_NAME=${INPUT_GITHUB_REPO}
 REPOSITORY_NAME=${REPOSITORY_OWNER_SLASH_NAME##*/}
@@ -10,10 +10,10 @@ GITHUB_PAGES_WEBSITE_URL="https://${INPUT_GITHUB_REPO_OWNER}.github.io/${REPOSIT
 #echo "Github pages url $GITHUB_PAGES_WEBSITE_URL"
 
 if [[ ${INPUT_SUBFOLDER} != '' ]]; then
-    INPUT_TEST_RESULTS="${INPUT_TEST_RESULTS}/${INPUT_SUBFOLDER}"
+    INPUT_TEST_RESULTS_HISTORY="${INPUT_TEST_RESULTS_HISTORY}/${INPUT_SUBFOLDER}"
     INPUT_GH_PAGES="${INPUT_GH_PAGES}/${INPUT_SUBFOLDER}"
-    echo "NEW test results history folder ${INPUT_TEST_RESULTS}"
-    mkdir -p ./${INPUT_TEST_RESULTS}
+    echo "NEW test results history folder ${INPUT_TEST_RESULTS_HISTORY}"
+    mkdir -p ./${INPUT_TEST_RESULTS_HISTORY}
     GITHUB_PAGES_WEBSITE_URL="${GITHUB_PAGES_WEBSITE_URL}/${INPUT_SUBFOLDER}"
     echo "NEW github pages url ${GITHUB_PAGES_WEBSITE_URL}"
 fi
@@ -23,13 +23,13 @@ if [[ ${INPUT_REPORT_URL} != '' ]]; then
     echo "Replacing github pages url with user input. NEW url ${GITHUB_PAGES_WEBSITE_URL}"
 fi
 
-COUNT=$( ( ls ./${INPUT_TEST_RESULTS} | wc -l ) )
+COUNT=$( ( ls ./${INPUT_TEST_RESULTS_HISTORY} | wc -l ) )
 echo "count folders in test-results-history: ${COUNT}"
 echo "keep reports count ${INPUT_KEEP_REPORTS}"
 INPUT_KEEP_REPORTS=$((INPUT_KEEP_REPORTS+1))
 echo "if ${COUNT} > ${INPUT_KEEP_REPORTS}"
 if (( COUNT > INPUT_KEEP_REPORTS )); then
-  cd ./${INPUT_TEST_RESULTS}
+  cd ./${INPUT_TEST_RESULTS_HISTORY}
   echo "remove index.html last-history"
   rm index.html last-history -rv
   echo "remove old reports"
@@ -38,12 +38,12 @@ if (( COUNT > INPUT_KEEP_REPORTS )); then
 fi
 
 #echo "index.html"
-echo "<!DOCTYPE html><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; URL=${GITHUB_PAGES_WEBSITE_URL}/${INPUT_GITHUB_RUN_NUM}/\">" > ./${INPUT_TEST_RESULTS}/index.html # path
-echo "<meta http-equiv=\"Pragma\" content=\"no-cache\"><meta http-equiv=\"Expires\" content=\"0\">" >> ./${INPUT_TEST_RESULTS}/index.html
+echo "<!DOCTYPE html><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; URL=${GITHUB_PAGES_WEBSITE_URL}/${INPUT_GITHUB_RUN_NUM}/\">" > ./${INPUT_TEST_RESULTS_HISTORY}/index.html # path
+echo "<meta http-equiv=\"Pragma\" content=\"no-cache\"><meta http-equiv=\"Expires\" content=\"0\">" >> ./${INPUT_TEST_RESULTS_HISTORY}/index.html
 #cat ./${INPUT_TEST_RESULTS}/index.html
 
 #echo "executor.json"
-echo '{"name":"GitHub Actions","type":"github","reportName":"Allure Report with history",' > executor.json
+echo '{"name":"GitHub Actions","type":"github","reportName":"Test Results with history",' > executor.json
 echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
 echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${INPUT_GITHUB_RUN_NUM}/\"," >> executor.json
 echo "\"buildUrl\":\"https://github.com/${INPUT_GITHUB_REPO}/actions/runs/${INPUT_GITHUB_RUN_ID}\"," >> executor.json
