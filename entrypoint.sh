@@ -1,7 +1,5 @@
 #! /usr/bin/env bash
 
-unset JAVA_HOME
-
 mkdir -p ./${INPUT_GH_PAGES}
 mkdir -p ./${INPUT_PLAYWRIGHT_HISTORY}
 cp -r ./${INPUT_GH_PAGES}/. ./${INPUT_PLAYWRIGHT_HISTORY}
