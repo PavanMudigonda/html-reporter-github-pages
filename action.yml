@@ -20,7 +20,7 @@ inputs:
   playwright_history:
     description: 'Folder for allure history'
     required: true
-    default: 'allure-history'
+    default: 'playwright-history'
   subfolder:
     description: 'subfolder'
     required: false

@@ -60,14 +60,12 @@ echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> ./${INPUT_PLAYWRIGHT_RESULTS}/environm
 echo "keep allure history from ${INPUT_GH_PAGES}/last-history to ${INPUT_PLAYWRIGHT_RESULTS}/history"
 cp -r ./${INPUT_GH_PAGES}/last-history/. ./${INPUT_PLAYWRIGHT_RESULTS}/history
 
-INPUT_PLAYWRIGHT_REPORT = ${INPUT_PLAYWRIGHT_RESULTS}
+
 echo "generating report from ${INPUT_PLAYWRIGHT_RESULTS} to ${INPUT_PLAYWRIGHT_REPORT} ..."
-#ls -l ${INPUT_PLAYWRIGHT_RESULTS}
-mv ${INPUT_PLAYWRIGHT_RESULTS}/* ${INPUT_PLAYWRIGHT_REPORT}/
+ls -l ${INPUT_PLAYWRIGHT_RESULTS}
 #echo "listing report directory ..."
-#ls -l ${INPUT_PLAYWRIGHT_REPORT}
 
 echo "copy allure-report to ${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}"
-cp -r ./${INPUT_PLAYWRIGHT_REPORT}/. ./${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}
+cp -r ./${INPUT_PLAYWRIGHT_RESULTS}/. ./${INPUT_PLAYWRIGHT_HISTORY}/${INPUT_GITHUB_RUN_NUM}
 echo "copy allure-report history to /${INPUT_PLAYWRIGHT_HISTORY}/last-history"
-cp -r ./${INPUT_PLAYWRIGHT_REPORT}/history/. ./${INPUT_PLAYWRIGHT_HISTORY}/last-history
+cp -r ./${INPUT_PLAYWRIGHT_RESULTS}/history/. ./${INPUT_PLAYWRIGHT_HISTORY}/last-history
