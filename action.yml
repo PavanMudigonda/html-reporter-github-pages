@@ -5,18 +5,22 @@ branding:
   icon: 'layout'
   color: 'green'
 inputs:
-  test_results:
-    description: 'test result data dir'
+  playwright_results:
+    description: 'Playwright test result data dir'
+    required: true
+    default: 'test-results'
+  playwright_report:
+    description: 'Allure report target dir'
     required: true
     default: 'test-results'
   gh_pages:
     description: 'Folder with gh-pages branch'
     required: true
     default: 'gh-pages'
-  test_results_history:
-    description: 'Folder for test results history'
+  allure_history:
+    description: 'Folder for allure history'
     required: true
-    default: 'test-results-history'
+    default: 'allure-history'
   subfolder:
     description: 'subfolder'
     required: false
