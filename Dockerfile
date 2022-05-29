@@ -1,4 +1,4 @@
-FROM alpine
+FROM ubuntu
 
 RUN apk update && \
     apk add --no-cache bash wget unzip && \
