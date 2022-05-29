@@ -1,0 +1,54 @@
+name: test
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Git Repo
+        uses: actions/checkout@v2
+
+      - name: List Files in workspace
+        if: always()
+        run: |
+          mv ./html-report/* test-results;
+          ls -R;
+
+      - name: Get Test Results history
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Create Playwright Test Results History
+        uses: PavanMudigonda/playwright-github-pages@v0.1
+        id: test-report
+        with:
+          test_results: test-results
+          gh_pages: gh-pages
+          test_results_history: test-results-history
+          keep_reports: 20
+
+      - name: Deploy report to Github Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v2
+        env:
+          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_BRANCH: gh-pages
+          PUBLISH_DIR: test-results-history
+
+      - name: Post the link to the report
+        if: always()
+        uses: Sibz/github-status-action@v1
+        with: 
+            authToken: ${{secrets.GITHUB_TOKEN}}
+            context: 'Test Results Link'
+            state: 'success'
+            sha: ${{ github.sha }}
+            target_url: https://PavanMudigonda.github.io/playwright-github-pages
