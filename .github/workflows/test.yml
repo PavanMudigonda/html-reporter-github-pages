@@ -10,7 +10,7 @@ jobs:
 
     steps:
       - name: Checkout Git Repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: List Files in workspace
         if: always()
@@ -40,7 +40,7 @@ jobs:
         env:
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: test-results-history
+          PUBLISH_DIR: test-results
 
       - name: Post the link to the report
         if: always()
