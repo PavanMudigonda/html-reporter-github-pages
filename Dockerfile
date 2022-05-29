@@ -1,8 +1,7 @@
 FROM ubuntu
 
 RUN apt update && \
-    apt add --no-cache bash wget unzip && \
-    rm -rf /var/cache/apt/* \
+    wget unzip && \
     apt reinstall runc
 
 ENV ROOT=/app
