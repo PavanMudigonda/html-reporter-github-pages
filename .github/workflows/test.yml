@@ -35,9 +35,9 @@ jobs:
         if: always()        
         id: test-report
         with:
-          test_results: test-results
+          playwright_results: test-results
           gh_pages: gh-pages
-          test_results_history: test-results-history
+          playwright_history: playwright-history
           keep_reports: 20
 
       - name: Deploy report to Github Pages
@@ -46,7 +46,7 @@ jobs:
         env:
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: test-results-history
+          PUBLISH_DIR: playwright-history
 
       - name: Post the link to the report
         if: always()
