@@ -20,7 +20,7 @@ Default `gh-pages`
 
 ```yaml
 - name: Get Playwright history
-  uses: actions/checkout@v2
+  uses: actions/checkout@v3
   if: always()
   continue-on-error: true
   with:
