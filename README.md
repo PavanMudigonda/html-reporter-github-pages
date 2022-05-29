@@ -1,13 +1,13 @@
 # Playwright HTML Test Results on GitHub Pages with history action
 
 
-Example workflow file [playwright-github-pages]()
+Example workflow file [playwright-github-pages](https://github.com/PavanMudigonda/playwright-github-pages/blob/main/.github/workflows/test.yml)
 
 ## Inputs
 
 ### `test-results`
 
-**Required** The relative path to the Allure results directory. 
+**Required** The relative path to the Playwright results directory. 
 
 Default `test-results`
 
@@ -19,7 +19,7 @@ Also, you need to do a checkout of `gh-pages` branch, even it doesn't exist yet.
 Default `gh-pages`
 
 ```yaml
-- name: Get Allure history
+- name: Get Playwright history
   uses: actions/checkout@v2
   if: always()
   continue-on-error: true
@@ -28,11 +28,11 @@ Default `gh-pages`
     path: gh-pages
 ```
 
-### `allure_history`
+### `playwright_history`
 
 **Required** The relative path to the folder, that will be published to GitHub Pages.
 
-Default `allure-history`
+Default `playwright-history`
 
 ### `subfolder`
 
@@ -49,9 +49,9 @@ Default ``
   if: always()
   id: test-results
   with:
-    test_results: test-results
+    playwright_results: test-results
     gh_pages: gh-pages
-    allure_history: test-results-history
+    playwright_history: test-results-history
 ```
 
 ## Example usage (github action)
@@ -61,9 +61,9 @@ Default ``
   uses: PavanMudigonda/playwright-github-pages@v0.1
   id: test-report
   with:
-    test_results: test-results
+    playwright_results: test-results
     gh_pages: gh-pages
-    test_results_history: test-results-history
+    playwright_history: playwright-history
 ```
 
 ## Finally you need to publish on GitHub Pages
@@ -75,7 +75,7 @@ Default ``
   env:
     PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     PUBLISH_BRANCH: gh-pages
-    PUBLISH_DIR: test-results
+    PUBLISH_DIR: playwright-history
 ```
 
 ## Also you can post the link to the report in the checks section
