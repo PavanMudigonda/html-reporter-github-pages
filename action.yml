@@ -36,7 +36,6 @@ inputs:
   github_repo:
     description: 'GitHub repository'
     required: true
-    default: ${{ github.repository }}
   github_repo_owner:
     description: 'GitHub repository owner'
     required: true
