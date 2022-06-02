@@ -47,6 +47,15 @@ jobs:
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: playwright-history
 
+      - name: Checkout jacoco reporter
+        uses: actions/checkout@v3
+        with:
+          repository: PavanMudigonda/jacoco-reporter
+          path: jacoco-reporter
+          
+      - name: List Files
+        run: ls -R
+        
       - name: Post the link to the report
         if: always()
         uses: Sibz/github-status-action@v1
