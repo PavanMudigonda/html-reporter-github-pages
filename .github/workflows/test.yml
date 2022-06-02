@@ -52,6 +52,7 @@ jobs:
         with:
           repository: PavanMudigonda/jacoco-reporter
           path: jacoco-reporter
+          ref: gh-pages
           
       - name: List Files
         run: ls -R
