@@ -16,7 +16,7 @@ jobs:
       - name: Checkout tools repo
         uses: actions/checkout@v3
         with:
-          repository: PavanMudigonda/devop
+          repository: PavanMudigonda/devops
           path: devops
           ref: gh-pages
 
