@@ -43,7 +43,7 @@ jobs:
         with:
           playwright_results: test-results
           gh_pages: gh-pages
-          playwright_history: devops/playwright-history
+          playwright_history: playwright-history
           keep_reports: 20
 
       - name: Deploy report to Github Pages
@@ -51,7 +51,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v2
         env:
           PERSONAL_TOKEN: ${{ secrets.GH_PAT }}
-          external_repo: PavanMudigonda/devops
+          external_repository: PavanMudigonda/devops
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: playwright-history
 
