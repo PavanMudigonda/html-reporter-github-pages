@@ -51,7 +51,8 @@ jobs:
         if: always()
         uses: peaceiris/actions-gh-pages@v2
         env:
-          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_TOKEN: ${{ secrets.GH_PAT }}
+          external_repo: PavanMudigonda/devops
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: playwright-history
 
