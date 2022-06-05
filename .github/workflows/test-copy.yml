@@ -19,6 +19,7 @@ jobs:
           repository: PavanMudigonda/devops
           path: devops
           ref: gh-pages
+          token: ${{ secrets.GH_PAT }}
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
