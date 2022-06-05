@@ -51,6 +51,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         env:
           PUBLISH_BRANCH: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           PUBLISH_DIR: playwright-history
 
       - name: Post the link to the report
