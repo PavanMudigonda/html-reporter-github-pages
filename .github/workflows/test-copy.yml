@@ -51,7 +51,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v2
         env:
           PERSONAL_TOKEN: ${{ secrets.GH_PAT }}
-          external_repository: PavanMudigonda/devops
+          external_repository: PavanMudigonda/devops.github.io
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: playwright-history
 
