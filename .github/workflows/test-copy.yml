@@ -48,10 +48,10 @@ jobs:
 
       - name: Deploy report to Github Pages
         if: always()
-        uses: peaceiris/actions-gh-pages@v2
+        uses: peaceiris/actions-gh-pages@v3
         env:
           PERSONAL_TOKEN: ${{ secrets.GH_PAT }}
-          external_repository: PavanMudigonda/devops.github.io
+          external_repository: PavanMudigonda/devops
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: playwright-history
 
