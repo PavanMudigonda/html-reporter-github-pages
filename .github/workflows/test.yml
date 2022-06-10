@@ -55,4 +55,4 @@ jobs:
             context: 'Test Results Link'
             state: 'success'
             sha: ${{ github.sha }}
-            target_url: https://PavanMudigonda.github.io/playwright-github-pages/${{ github.run_id }}
+            target_url: https://PavanMudigonda.github.io/playwright-github-pages/${{ github.run_number }}
