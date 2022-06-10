@@ -50,6 +50,7 @@ jobs:
         if: always()
         uses: peaceiris/actions-gh-pages@v3
         env:
+          external_repository: PavanMudigonda/devops
           PUBLISH_BRANCH: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
           PUBLISH_DIR: playwright-history
@@ -62,4 +63,4 @@ jobs:
             context: 'Test Results Link'
             state: 'success'
             sha: ${{ github.sha }}
-            target_url: https://PavanMudigonda.github.io/playwright-github-pages
+            target_url: https://PavanMudigonda.github.io/playwright-github-pages/${{ github_run_number }}
