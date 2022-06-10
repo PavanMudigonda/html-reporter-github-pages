@@ -52,7 +52,7 @@ jobs:
         env:
           external_repository: PavanMudigonda/devops
           PUBLISH_BRANCH: gh-pages
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_PAT }}
           PUBLISH_DIR: playwright-history
 
       - name: Post the link to the report
