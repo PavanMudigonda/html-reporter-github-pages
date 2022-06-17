@@ -91,3 +91,13 @@ Default ``
       sha: ${{ github.event.pull_request.head.sha }}
       target_url: PavanMudigonda.github.io/playwright-github-pages/${{ github.run_number }}
 ```
+
+### Sample GH Pages Home Page
+
+<img width="626" alt="image" src="https://user-images.githubusercontent.com/29324338/174328988-d53bc4bd-e189-4179-8a42-2046b8c83a9b.png">
+
+### Sample GH Pages Test Results
+
+<img width="1287" alt="image" src="https://user-images.githubusercontent.com/29324338/174329137-a76d7c84-62b0-4724-aa37-440ea753b740.png">
+
+
