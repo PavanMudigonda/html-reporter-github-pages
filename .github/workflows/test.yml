@@ -31,7 +31,7 @@ jobs:
           path: gh-pages
 
       - name: Create Playwright Test Results History
-        uses: PavanMudigonda/playwright-github-pages@v0.1
+        uses: PavanMudigonda/playwright-html-reporter-github-pages@v0.1
         id: test-report
         with:
           playwright_results: test-results
@@ -55,4 +55,4 @@ jobs:
             context: 'Test Results Link'
             state: 'success'
             sha: ${{ github.sha }}
-            target_url: https://PavanMudigonda.github.io/playwright-github-pages/${{ github.run_number }}
+            target_url: https://PavanMudigonda.github.io/playwright-html-reporter-github-pages/${{ github.run_number }}
