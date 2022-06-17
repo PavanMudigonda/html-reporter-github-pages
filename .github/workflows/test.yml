@@ -43,6 +43,7 @@ jobs:
         if: always()
         uses: peaceiris/actions-gh-pages@v3
         env:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           PUBLISH_BRANCH: gh-pages
           PUBLISH_DIR: playwright-history
 
