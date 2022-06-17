@@ -46,6 +46,7 @@ jobs:
           github_token: ${{ secrets.GH_PAT }}
           publish_branch: gh-pages
           publish_dir: playwright-history
+          keep_files: true
 
       - name: Post the link to the report
         if: always()
