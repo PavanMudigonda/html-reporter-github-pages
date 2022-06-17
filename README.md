@@ -1,7 +1,7 @@
 # Playwright HTML Test Results on GitHub Pages with history action
 
 
-Example workflow file [playwright-github-pages](https://github.com/PavanMudigonda/playwright-html-reporter-github-pages/blob/main/.github/workflows/test.yml)
+Example workflow file [playwright-html-reporter-github-pages](https://github.com/PavanMudigonda/playwright-html-reporter-github-pages/blob/main/.github/workflows/test.yml)
 
 ## Inputs
 
@@ -79,7 +79,7 @@ Default ``
 
 ## Publish to Azure Blob instead
 
-# Reference https://github.com/marketplace/actions/azure-static-website
+#### Reference https://github.com/marketplace/actions/azure-static-website
 
 ```yaml
     - uses: tibor19/static-website-deploy@v1
