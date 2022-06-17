@@ -77,6 +77,18 @@ Default ``
     PUBLISH_DIR: playwright-history
 ```
 
+## Publish to Azure Blob instead
+
+# Reference https://github.com/marketplace/actions/azure-static-website
+
+```yaml
+    - uses: tibor19/static-website-deploy@v1
+      with:
+        enabled-static-website: 'true'
+        folder: 'playwright-history'
+        connection-string: ${{ secrets.CONNECTION_STRING }}
+```
+
 ## Also you can post the link to the report in the checks section
 
 ```yaml
