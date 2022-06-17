@@ -39,9 +39,20 @@ if (( COUNT > INPUT_KEEP_REPORTS )); then
 fi
 
 #echo "index.html"
-echo "<!DOCTYPE html><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; URL=${GITHUB_PAGES_WEBSITE_URL}/${INPUT_GITHUB_RUN_NUM}/\">" > ./${INPUT_PLAYWRIGHT_HISTORY}/index.html # path
-echo "<meta http-equiv=\"Pragma\" content=\"no-cache\"><meta http-equiv=\"Expires\" content=\"0\">" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
-#cat ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
+# echo "<!DOCTYPE html><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0; URL=${GITHUB_PAGES_WEBSITE_URL}/${INPUT_GITHUB_RUN_NUM}/\">" > ./${INPUT_PLAYWRIGHT_HISTORY}/index.html # path
+# echo "<meta http-equiv=\"Pragma\" content=\"no-cache\"><meta http-equiv=\"Expires\" content=\"0\">" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
+# #cat ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
+
+cat index-template.html > index.html
+
+echo `├── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results</a><br>` >> index.html;
+ls -l | grep "^d" | while read line;
+    do 
+        RUN_ID=$(`awk -v line="$line" '{print $9}'`);
+        echo "├── <a href=`"./${RUN_ID}/"`>RUN ID ${RUN_ID}</a><br>" >> index.html; 
+    done
+echo "</html>" >> index.html    
+cat index.html
 
 #echo "executor.json"
 echo '{"name":"GitHub Actions","type":"github","reportName":"Playwright Report with history",' > executor.json
