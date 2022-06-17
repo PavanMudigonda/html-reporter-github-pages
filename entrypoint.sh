@@ -46,7 +46,7 @@ fi
 cat index-template.html > ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
 
 echo "├── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results - RUN ID: ${INPUT_GITHUB_RUN_NUM}</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
-ls -l ./${INPUT_PLAYWRIGHT_HISTORY} | grep "^d" | RUN_ID=$(awk '{print $9}') | | sort -n | while read line;
+ls -l ./${INPUT_PLAYWRIGHT_HISTORY} | grep "^d" | RUN_ID=$(awk '{print $9}') | sort -n | while read line;
     do 
         echo "├── <a href="./${RUN_ID}/">RUN ID: ${RUN_ID}</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
     done;
