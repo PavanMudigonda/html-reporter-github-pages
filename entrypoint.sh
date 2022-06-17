@@ -45,12 +45,12 @@ fi
 
 cat index-template.html > ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
 
-echo " ── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results - RUN ID: ${INPUT_GITHUB_RUN_NUM}</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
+echo "├── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results - RUN ID: ${INPUT_GITHUB_RUN_NUM}</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
 ls -l ./${INPUT_PLAYWRIGHT_HISTORY} | grep "^d" | sort -nr | awk -F' ' '{print $9;}' | while read line;
     do
 #       RUN_ID=$(awk -v '$1 == $line {print $9}');
 #         RUN_ID=$(awk -F '{print $0;}');
-        echo "├── <a href="./"${line}"/">RUN ID: "${line}"</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
+        echo "+── <a href="./"${line}"/">RUN ID: "${line}"</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
     done;
 echo "</html>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
 # cat ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
