@@ -10,6 +10,7 @@ RUN mkdir -p $ROOT
 
 WORKDIR $ROOT
 COPY ./entrypoint.sh /entrypoint.sh
+COPY ./index-template.html /index-template.html
 RUN ["chmod", "+x", "/entrypoint.sh"]
 ENTRYPOINT ["/entrypoint.sh"]
 
