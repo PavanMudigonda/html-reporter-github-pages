@@ -50,7 +50,7 @@ ls -l ./${INPUT_PLAYWRIGHT_HISTORY} | grep "^d" | sort -nr | while read line;
     do
 #       RUN_ID=$(awk -v '$1 == $line {print $9}');
         RUN_ID=;
-        echo "├── <a href="./awk '{print $9;}'/">RUN ID: awk '{print $9;}'</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
+        echo "├── <a href="./"awk '{print $9;}'"/">RUN ID: "awk '{print $9;}'"</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
     done;
 echo "</html>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
 # cat ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
