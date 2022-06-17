@@ -49,7 +49,7 @@ echo "── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results 
 ls -l ./${INPUT_PLAYWRIGHT_HISTORY} | grep "^d" | sort -nr | while read line;
     do
 #       RUN_ID=$(awk -v '$1 == $line {print $9}');
-        RUN_ID=$(awk '{print $9;}');
+        RUN_ID=$(awk -F' ' '{print $9;}');
         echo "├── <a href="./"${RUN_ID}"/">RUN ID: "${RUN_ID}"</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
     done;
 echo "</html>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
