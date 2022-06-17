@@ -37,7 +37,6 @@ Default `playwright-history`
 ### `subfolder`
 
 The relative path to the project folder, if you have few different projects in the repository. 
-This relative path also will be added to GitHub Pages link. Example project [allure-examples](https://github.com/simple-elf/allure-examples).
 
 Default ``
 
@@ -58,7 +57,7 @@ Default ``
 
 ```yaml
 - name: Test marketplace action
-  uses: PavanMudigonda/playwright-github-pages@v0.2
+  uses: PavanMudigonda/playwright-github-pages@main
   id: test-report
   with:
     playwright_results: test-results
@@ -71,7 +70,7 @@ Default ``
 ```yaml
 - name: Deploy report to Github Pages
   if: always()
-  uses: peaceiris/actions-gh-pages@v2
+  uses: peaceiris/actions-gh-pages@v3
   env:
     PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     PUBLISH_BRANCH: gh-pages
