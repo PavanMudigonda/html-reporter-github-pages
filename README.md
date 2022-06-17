@@ -1,7 +1,7 @@
 # Playwright HTML Test Results on GitHub Pages with history action
 
 
-Example workflow file [playwright-github-pages](https://github.com/PavanMudigonda/playwright-github-pages/blob/main/.github/workflows/test.yml)
+Example workflow file [playwright-github-pages](https://github.com/PavanMudigonda/playwright-html-reporter-github-pages/blob/main/.github/workflows/test.yml)
 
 ## Inputs
 
@@ -44,7 +44,7 @@ Default ``
 
 ```yaml
 - name: Test local action
-  uses: ./playwright-github-pages@main
+  uses: ./playwright-html-reporter-github-pages@main
   if: always()
   id: test-results
   with:
@@ -57,7 +57,7 @@ Default ``
 
 ```yaml
 - name: Test marketplace action
-  uses: PavanMudigonda/playwright-github-pages@main
+  uses: PavanMudigonda/playwright-html-reporter-github-pages@main
   id: test-report
   with:
     playwright_results: test-results
@@ -100,7 +100,7 @@ Default ``
       context: 'Test report'
       state: 'success'
       sha: ${{ github.event.pull_request.head.sha }}
-      target_url: PavanMudigonda.github.io/playwright-github-pages/${{ github.run_number }}
+      target_url: PavanMudigonda.github.io/playwright-html-reporter-github-pages/${{ github.run_number }}
 ```
 
 ### Sample GH Pages Home Page
