@@ -46,14 +46,14 @@ fi
 cat index-template.html > ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
 
 echo "├── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
-ls -l ./${INPUT_PLAYWRIGHT_HISTORY} | grep "^d" | while read line;
+ls -l ./${INPUT_PLAYWRIGHT_HISTORY} | grep "^d" | sort -n | while read line;
     do 
         RUN_ID=$(awk -v line="$line" '{print $9}');
-        echo "RUN ID: $RUN_ID";
-        echo "├── <a href="./${RUN_ID}/"> RUN ID ${RUN_ID}</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
-    done
-echo "</html>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
-cat ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
+        echo "RUN ID: $RUN_ID\n";
+#         echo "├── <a href="./${RUN_ID}/"> RUN ID ${RUN_ID}</a><br>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html; 
+    done;
+echo "</html>" >> ./${INPUT_PLAYWRIGHT_HISTORY}/index.html;
+# cat ./${INPUT_PLAYWRIGHT_HISTORY}/index.html
 
 #echo "executor.json"
 echo '{"name":"GitHub Actions","type":"github","reportName":"Playwright Report with history",' > executor.json
