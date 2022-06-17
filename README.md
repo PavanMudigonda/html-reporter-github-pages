@@ -58,7 +58,7 @@ Default ``
 
 ```yaml
 - name: Test marketplace action
-  uses: PavanMudigonda/playwright-github-pages@v0.1
+  uses: PavanMudigonda/playwright-github-pages@v0.2
   id: test-report
   with:
     playwright_results: test-results
