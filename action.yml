@@ -1,4 +1,4 @@
-name: 'playwright-github-pages'
+name: 'playwright-html-reporter-github-pages'
 description: 'Playwright HTML Test Results with history'
 author: 'Pavan Mudigonda'
 branding:
