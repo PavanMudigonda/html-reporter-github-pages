@@ -1,7 +1,6 @@
-# Playwright HTML Test Results on GitHub Pages with history action
+# HTML Test Results on GitHub Pages with history action
 
-
-Example workflow file [html-reporter-github-pages](https://github.com/PavanMudigonda/playwright-html-reporter-github-pages/blob/main/.github/workflows/test.yml)
+Example workflow file [html-reporter-github-pages](https://github.com/PavanMudigonda/html-reporter-github-pages/blob/main/.github/workflows/test.yml)
 
 ## Inputs
 
