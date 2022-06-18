@@ -1,22 +1,21 @@
-name: 'playwright-html-reporter-github-pages'
-description: 'Playwright HTML Test Results with history'
+name: 'html-reporter-github-pages'
+description: 'HTML Test Results with history'
 author: 'Pavan Mudigonda'
 branding:
   icon: 'layout'
   color: 'green'
 inputs:
-  playwright_results:
-    description: 'Playwright test result data dir'
+  test_results:
+    description: 'test result data dir'
     required: true
-    default: 'test-results'
   gh_pages:
     description: 'Folder with gh-pages branch'
     required: true
     default: 'gh-pages'
-  playwright_history:
+  results_history:
     description: 'Folder for allure history'
     required: true
-    default: 'playwright-history'
+    default: 'results-history'
   subfolder:
     description: 'subfolder'
     required: false

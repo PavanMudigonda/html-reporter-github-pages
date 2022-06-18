@@ -1,15 +1,15 @@
 # Playwright HTML Test Results on GitHub Pages with history action
 
 
-Example workflow file [playwright-html-reporter-github-pages](https://github.com/PavanMudigonda/playwright-html-reporter-github-pages/blob/main/.github/workflows/test.yml)
+Example workflow file [html-reporter-github-pages](https://github.com/PavanMudigonda/playwright-html-reporter-github-pages/blob/main/.github/workflows/test.yml)
 
 ## Inputs
 
 ### `test-results`
 
-**Required** The relative path to the Playwright results directory. 
+**Required** The relative path to the test results directory. 
 
-Default `test-results`
+Mandatory
 
 ### `gh_pages`
 
@@ -19,7 +19,7 @@ Also, you need to do a checkout of `gh-pages` branch, even it doesn't exist yet.
 Default `gh-pages`
 
 ```yaml
-- name: Get Playwright history
+- name: Get test results history
   uses: actions/checkout@v3
   if: always()
   continue-on-error: true
@@ -28,11 +28,11 @@ Default `gh-pages`
     path: gh-pages
 ```
 
-### `playwright_history`
+### `results_history`
 
 **Required** The relative path to the folder, that will be published to GitHub Pages.
 
-Default `playwright-history`
+Default `results-history`
 
 ### `subfolder`
 
@@ -44,25 +44,25 @@ Default ``
 
 ```yaml
 - name: Test local action
-  uses: ./playwright-html-reporter-github-pages@main
+  uses: ./html-reporter-github-pages@main
   if: always()
   id: test-results
   with:
     playwright_results: test-results
     gh_pages: gh-pages
-    playwright_history: test-results-history
+    playwright_history: results-history
 ```
 
 ## Example usage (github action)
 
 ```yaml
 - name: Test marketplace action
-  uses: PavanMudigonda/playwright-html-reporter-github-pages@main
+  uses: PavanMudigonda/html-reporter-github-pages@main
   id: test-report
   with:
     playwright_results: test-results
     gh_pages: gh-pages
-    playwright_history: playwright-history
+    playwright_history: results-history
 ```
 
 ## Finally you need to publish on GitHub Pages
@@ -74,19 +74,7 @@ Default ``
   env:
     PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     PUBLISH_BRANCH: gh-pages
-    PUBLISH_DIR: playwright-history
-```
-
-## Publish to Azure Blob instead
-
-#### Reference https://github.com/marketplace/actions/azure-static-website
-
-```yaml
-    - uses: tibor19/static-website-deploy@v1
-      with:
-        enabled-static-website: 'true'
-        folder: 'playwright-history'
-        connection-string: ${{ secrets.CONNECTION_STRING }}
+    PUBLISH_DIR: results-history
 ```
 
 ## Also you can post the link to the report in the checks section
@@ -100,7 +88,7 @@ Default ``
       context: 'Test report'
       state: 'success'
       sha: ${{ github.event.pull_request.head.sha }}
-      target_url: PavanMudigonda.github.io/playwright-html-reporter-github-pages/${{ github.run_number }}
+      target_url: PavanMudigonda.github.io/html-reporter-github-pages/${{ github.run_number }}
 ```
 
 ### Sample GH Pages Home Page

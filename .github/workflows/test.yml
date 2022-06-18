@@ -31,12 +31,11 @@ jobs:
           path: gh-pages
 
       - name: Create Playwright Test Results History
-        uses: PavanMudigonda/playwright-html-reporter-github-pages@v0.1
-        id: test-report
+        uses: PavanMudigonda/html-reporter-github-pages@v0.1
         with:
           playwright_results: test-results
           gh_pages: gh-pages
-          playwright_history: playwright-history
+          playwright_history: results-history
           keep_reports: 20
 
       - name: Deploy report to Github Pages
@@ -45,7 +44,7 @@ jobs:
         with:
           github_token: ${{ secrets.GH_PAT }}
           publish_branch: gh-pages
-          publish_dir: playwright-history
+          publish_dir: results-history
           keep_files: true
 
       - name: Post the link to the report
@@ -56,4 +55,4 @@ jobs:
             context: 'Test Results Link'
             state: 'success'
             sha: ${{ github.sha }}
-            target_url: https://PavanMudigonda.github.io/playwright-html-reporter-github-pages/${{ github.run_number }}
+            target_url: https://PavanMudigonda.github.io/html-reporter-github-pages/${{ github.run_number }}
