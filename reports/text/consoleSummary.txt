@@ -1,0 +1,72 @@
+
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+
+  execution: local
+     script: test1.js
+     output: json (reports/json/test1.json)
+
+  scenarios: (100.00%) 1 scenario, 10 max VUs, 40s max duration (incl. graceful stop):
+           * default: 10 looping VUs for 10s (gracefulStop: 30s)
+
+
+running (01.0s), 10/10 VUs, 0 complete and 0 interrupted iterations
+default   [  10% ] 10 VUs  01.0s/10s
+
+running (02.0s), 10/10 VUs, 10 complete and 0 interrupted iterations
+default   [  20% ] 10 VUs  02.0s/10s
+
+running (03.0s), 10/10 VUs, 20 complete and 0 interrupted iterations
+default   [  30% ] 10 VUs  03.0s/10s
+
+running (04.0s), 10/10 VUs, 20 complete and 0 interrupted iterations
+default   [  40% ] 10 VUs  04.0s/10s
+
+running (05.0s), 10/10 VUs, 30 complete and 0 interrupted iterations
+default   [  50% ] 10 VUs  05.0s/10s
+
+running (06.0s), 10/10 VUs, 40 complete and 0 interrupted iterations
+default   [  60% ] 10 VUs  06.0s/10s
+
+running (07.0s), 10/10 VUs, 50 complete and 0 interrupted iterations
+default   [  70% ] 10 VUs  07.0s/10s
+
+running (08.0s), 10/10 VUs, 60 complete and 0 interrupted iterations
+default   [  80% ] 10 VUs  08.0s/10s
+
+running (09.0s), 10/10 VUs, 70 complete and 0 interrupted iterations
+default   [  90% ] 10 VUs  09.0s/10s
+
+running (10.0s), 10/10 VUs, 79 complete and 0 interrupted iterations
+default   [ 100% ] 10 VUs  10.0s/10s
+
+running (11.0s), 09/10 VUs, 80 complete and 0 interrupted iterations
+default ↓ [ 100% ] 10 VUs  10s
+
+running (11.1s), 00/10 VUs, 89 complete and 0 interrupted iterations
+default ✓ [ 100% ] 10 VUs  10s
+
+     ✓ status code is 200
+
+     K6PageVisits...................: 89      7.998545/s
+     checks.........................: 100.00% ✓ 89       ✗ 0   
+     data_received..................: 1.1 MB  98 kB/s
+     data_sent......................: 23 kB   2.0 kB/s
+     http_req_blocked...............: avg=19.69ms  min=2µs     med=7µs     max=318.68ms p(90)=64.97ms  p(95)=266.42ms
+     http_req_connecting............: avg=3.78ms   min=0s      med=0s      max=34.73ms  p(90)=31.43ms  p(95)=34.21ms 
+   ✓ http_req_duration..............: avg=97.51ms  min=54.57ms med=87.59ms max=210.84ms p(90)=161.72ms p(95)=176.17ms
+       { expected_response:true }...: avg=97.51ms  min=54.57ms med=87.59ms max=210.84ms p(90)=161.72ms p(95)=176.17ms
+   ✓ http_req_failed................: 0.00%   ✓ 0        ✗ 178 
+     http_req_receiving.............: avg=1.37ms   min=97µs    med=477µs   max=34.01ms  p(90)=1.43ms   p(95)=1.66ms  
+     http_req_sending...............: avg=127.45µs min=8µs     med=24µs    max=8.5ms    p(90)=70µs     p(95)=89.05µs 
+     http_req_tls_handshaking.......: avg=14.18ms  min=0s      med=0s      max=285.35ms p(90)=0s       p(95)=235.56ms
+     http_req_waiting...............: avg=96.01ms  min=54.24ms med=66.83ms max=210.57ms p(90)=160.76ms p(95)=175.68ms
+     http_reqs......................: 178     15.99709/s
+     iteration_duration.............: avg=1.23s    min=1.11s   med=1.19s   max=1.65s    p(90)=1.61s    p(95)=1.62s   
+     iterations.....................: 89      7.998545/s
+     vus............................: 9       min=9      max=10
+     vus_max........................: 10      min=10     max=10
+
