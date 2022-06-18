@@ -30,12 +30,12 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Create Playwright Test Results History
+      - name: Create Test Results History
         uses: PavanMudigonda/html-reporter-github-pages@v0.1
         with:
-          playwright_results: test-results
+          test_results: test-results
           gh_pages: gh-pages
-          playwright_history: results-history
+          results_history: results-history
           keep_reports: 20
 
       - name: Deploy report to Github Pages
