@@ -63,7 +63,7 @@ Default ``
 
 ```yaml
 - name: Test marketplace action
-  uses: PavanMudigonda/html-reporter-github-pages@main
+  uses: PavanMudigonda/html-reporter-github-pages@v1.0
   id: test-report
   with:
     playwright_results: test-results
