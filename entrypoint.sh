@@ -75,9 +75,19 @@ cat index-template.html > ./${INPUT_RESULTS_HISTORY}/index.html
 echo "├── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results - RUN ID: ${INPUT_GITHUB_RUN_NUM}</a><br>" >> ./${INPUT_RESULTS_HISTORY}/index.html;
 ls -l ./${INPUT_RESULTS_HISTORY} | grep "^d" | sort -nr | awk -F' ' '{print $9;}' | while read line;
     do
-#       RUN_ID=$(awk -v '$1 == $line {print $9}');
-#         RUN_ID=$(awk -F '{print $0;}');
-        echo "├── <a href="./"${line}"/">RUN ID: "${line}"</a><br>" >> ./${INPUT_RESULTS_HISTORY}/index.html; 
+    	curl \
+	   --silent \
+	   --location \
+	   --request GET \
+	   --header 'Accept: application/vnd.github.v4+json' \
+	   --header 'Content-Type: application/json' \
+	   --header "Authorization: token ${INPUT_TOKEN}" \
+	   --header 'cache-control: no-cache' \
+	   "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/${INPUT_WORKFLOW_ID}/runs" > temp.json;
+	   
+	CREATED_AT=$(cat temp.json | jq --argjson "RUN_NUM" "${line}" -r '.workflow_runs[] | select(.run_number==$RUN_NUM) | .created_at');
+	NEW_CREATED_AT=`sed -e 's/T/ /' -e 's/Z/ UTC/' <<<"$CREATED_AT"`
+	echo "├── <a href="./"${line}"/">RUN ID: "${line}" -  "${NEW_CREATED_AT}" </a><br>" >> ./${INPUT_RESULTS_HISTORY}/index.html;    
     done;
 echo "</html>" >> ./${INPUT_RESULTS_HISTORY}/index.html;
 # cat ./${INPUT_RESULTS_HISTORY}/index.html
