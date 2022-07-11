@@ -74,13 +74,14 @@ Default ``
 ## Finally you need to publish on GitHub Pages
 
 ```yaml
-- name: Deploy report to Github Pages
-  if: always()
-  uses: peaceiris/actions-gh-pages@v3
-  env:
-    PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    PUBLISH_BRANCH: gh-pages
-    PUBLISH_DIR: results-history
+      - name: Publish Github Pages
+        if: ${{ always() }}
+        uses: peaceiris/actions-gh-pages@v3.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: results-history
+          keep_files: true 
 ```
 
 ## Also you can post the link to the report in the checks section
