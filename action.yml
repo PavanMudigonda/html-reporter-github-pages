@@ -12,7 +12,7 @@ inputs:
   token:
     description: 'Github Token'
     required: true
-    default: ''
+    default: ${{ github.token }}
   test_results:
     description: 'test result data dir'
     required: true
