@@ -54,9 +54,9 @@ Default ``
   if: always()
   id: test-results
   with:
-    playwright_results: test-results
+    test_results: test-results
     gh_pages: gh-pages
-    playwright_history: results-history
+    results_history: results-history
 ```
 
 ## Example usage (github action)
@@ -66,9 +66,9 @@ Default ``
   uses: PavanMudigonda/html-reporter-github-pages@v1.0
   id: test-report
   with:
-    playwright_results: test-results
+    test_results: test-results
     gh_pages: gh-pages
-    playwright_history: results-history
+    results_history: results-history
 ```
 
 ## Finally you need to publish on GitHub Pages
