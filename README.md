@@ -46,7 +46,7 @@ None
 ## Example workflow - same repo
 
       - name: GH Pages Push
-        uses: tr/cicd_gh-actions-gh-pages@v1.0
+        uses: PavanMudigonda/html-reporter-github-pages@v1.0
         with:
           test_results: test-results
           keep_reports: 20
