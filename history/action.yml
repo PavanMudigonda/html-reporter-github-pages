@@ -1,0 +1,53 @@
+name: 'cicd_gh-actions-gh-pages-history'
+description: 'Github Pages HTML Test Results with history'
+author: 'Pavan Mudigonda'
+branding:
+  icon: 'layout'
+  color: 'green'
+inputs:
+  token:
+    description: 'default Github token'
+    required: false
+    default: ${{ github.token }}
+  workflow_id:
+    description: 'Workflow File NAME'
+    required: true
+    default: ''
+  test_results:
+    description: 'test result data dir'
+    required: true
+  gh_pages:
+    description: 'Folder with gh-pages branch'
+    required: true
+    default: 'gh-pages'
+  results_history:
+    description: 'Folder for allure history'
+    required: true
+    default: 'results-history'
+  subfolder:
+    description: 'subfolder'
+    required: false
+    default: ''
+  keep_reports:
+    description: 'Keep X last reports'
+    required: false
+    default: '20'
+  github_run_num:
+    description: 'GitHub Actions build number'
+    required: true
+    default: ${{ github.run_number }}
+  github_run_id:
+    description: 'GitHub Actions run id'
+    required: true
+    default: ${{ github.run_id }}
+  github_repo:
+    description: 'GitHub repository'
+    required: true
+    default: ${{ github.repository }}
+  report_url:
+    description: 'Use a custom URL instead of *.github.io'
+    required: false
+    default: '' 
+runs:
+  using: 'docker'
+  image: 'Dockerfile'

@@ -31,7 +31,10 @@
 
 EOF
 
+export TZ="/usr/share/zoneinfo/America/Toronto";
+DATE_WITH_TIME=`date "+%Y-%m-%d %H:%M:%S %Z"`;
 mkdir -p ./${INPUT_GH_PAGES}
+mkdir -p ./${INPUT_TEST_RESULTS}
 mkdir -p ./${INPUT_RESULTS_HISTORY}
 cp -r ./${INPUT_GH_PAGES}/. ./${INPUT_RESULTS_HISTORY}
 
@@ -69,13 +72,12 @@ if (( COUNT > INPUT_KEEP_REPORTS )); then
   cd ${GITHUB_WORKSPACE}
 fi
 
-
 cat index-template.html > ./${INPUT_RESULTS_HISTORY}/index.html
 
-echo "├── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">Latest Test Results - RUN ID: ${INPUT_GITHUB_RUN_NUM}</a><br>" >> ./${INPUT_RESULTS_HISTORY}/index.html;
-ls -l ./${INPUT_RESULTS_HISTORY} | grep "^d" | sort -nr | awk -F' ' '{print $9;}' | while read line;
-    do
-    	curl \
+echo "├── <a href="./${INPUT_GITHUB_RUN_NUM}/index.html">RUN ID: ${INPUT_GITHUB_RUN_NUM} - ${DATE_WITH_TIME}(Latest)</a><br>" >> ./${INPUT_RESULTS_HISTORY}/index.html;
+ls -l ./${INPUT_RESULTS_HISTORY} | grep "^d" | sort -nr | awk -F' ' '{print $9;}' | sed 's/last-history//' | while read line;
+    do	    
+	curl \
 	   --silent \
 	   --location \
 	   --request GET \
@@ -87,10 +89,10 @@ ls -l ./${INPUT_RESULTS_HISTORY} | grep "^d" | sort -nr | awk -F' ' '{print $9;}
 	   
 	CREATED_AT=$(cat temp.json | jq --argjson "RUN_NUM" "${line}" -r '.workflow_runs[] | select(.run_number==$RUN_NUM) | .created_at');
 	NEW_CREATED_AT=`sed -e 's/T/ /' -e 's/Z/ UTC/' <<<"$CREATED_AT"`
-	echo "├── <a href="./"${line}"/">RUN ID: "${line}" -  "${NEW_CREATED_AT}" </a><br>" >> ./${INPUT_RESULTS_HISTORY}/index.html;    
+	echo "├── <a href="./"${line}"/">RUN ID: "${line}" -  "${NEW_CREATED_AT}" </a><br>" >> ./${INPUT_RESULTS_HISTORY}/index.html;
     done;
 echo "</html>" >> ./${INPUT_RESULTS_HISTORY}/index.html;
-# cat ./${INPUT_RESULTS_HISTORY}/index.html
+
 
 #echo "executor.json"
 echo '{"name":"GitHub Actions","type":"github","reportName":"Test Results Report with history",' > executor.json

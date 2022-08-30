@@ -1,7 +1,7 @@
 FROM alpine
 
 RUN apk update && \
-    apk add --no-cache bash wget unzip && \
+    apk add --no-cache bash wget unzip jq curl && \
     rm -rf /var/cache/apk/*
 
 ENV ROOT=/app
