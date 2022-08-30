@@ -60,7 +60,7 @@ runs:
         path: ${{ inputs.gh_pages }}
 
     - name: Create Test Results History GitHub Actions Run ID wise
-      uses: PavanMudigonda/html-reporter-github-pages/history@v1.0
+      uses: tr/cicd_gh-actions-gh-pages/history@v1.0
       if: always()
       id: test-results
       with:

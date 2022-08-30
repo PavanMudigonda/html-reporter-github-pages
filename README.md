@@ -50,7 +50,7 @@ None
         with:
           test_results: test-results
           keep_reports: 20
-          workflow_id: main.yml # This is your workflow YML FILE where you are using this actions. example test.yml
+          workflow_id: main.yml
 
 
 ## Example workflow - different repo
@@ -60,7 +60,7 @@ None
         with:
           test_results: test-results
           keep_reports: 20
-          workflow_id: main.yml # This is your workflow YML FILE where you are using this actions. example test.yml
+          workflow_id: main.yml
           token: ${{ secrets.PAT }}
           github_repo: PavanMudigonda/another-awesome-repo
 

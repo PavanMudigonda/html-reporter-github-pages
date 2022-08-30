@@ -1,4 +1,4 @@
-name: 'html-reporter-github-pages'
+name: 'cicd_gh-actions-gh-pages-history'
 description: 'Github Pages HTML Test Results with history'
 author: 'Pavan Mudigonda'
 branding:
