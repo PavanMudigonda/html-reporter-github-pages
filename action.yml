@@ -1,18 +1,18 @@
 name: 'html-reporter-github-pages'
-description: 'HTML Test Results with history'
+description: 'Github Pages HTML Test Results with history'
 author: 'Pavan Mudigonda'
 branding:
   icon: 'layout'
   color: 'green'
 inputs:
-  WORKFLOW_ID:
+  token:
+    description: 'default Github token'
+    required: false
+    default: ${{ github.token }}
+  workflow_id:
     description: 'Workflow File NAME'
     required: true
     default: ''
-  token:
-    description: 'Github Token'
-    required: true
-    default: ${{ github.token }}
   test_results:
     description: 'test result data dir'
     required: true
@@ -43,14 +43,38 @@ inputs:
   github_repo:
     description: 'GitHub repository'
     required: true
-  github_repo_owner:
-    description: 'GitHub repository owner'
-    required: true
-    default: ${{ github.repository_owner }}
   report_url:
     description: 'Use a custom URL instead of *.github.io'
     required: false
-    default: ''
+    default: '' 
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'composite'    
+  steps:
+
+    - name: Get test results history
+      uses: actions/checkout@v3
+      if: always()
+      continue-on-error: true
+      with:
+        ref: ${{ inputs.gh_pages }}
+        path: ${{ inputs.gh_pages }}
+
+    - name: Create Test Results History GitHub Actions Run ID wise
+      uses: tr/cicd_gh-actions-gh-pages/history@v1.0
+      if: always()
+      id: test-results
+      with:
+        token: ${{ inputs.token }}
+        WORKFLOW_ID: ${{ inputs.workflow_id }}
+        test_results: ${{ inputs.test_results }}
+        gh_pages: ${{ inputs.gh_pages }}
+        results_history: ${{ inputs.results_history }}
+
+    - name: Deploy report to Github Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v3.8.0
+      with:
+        github_token: ${{ inputs.token }}
+        publish_branch: ${{ inputs.gh_pages }}
+        publish_dir: ${{ inputs.results_history }}
+        keep_files: true
