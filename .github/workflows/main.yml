@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: GH Pages Push
-        uses: PavanMudigonda/html-reporter-github-pages@v1.0
+        uses: tr/cicd_gh-actions-gh-pages@v1.0
         with:
           test_results: test-results
           keep_reports: 20
