@@ -98,6 +98,50 @@ Default ``
       target_url: PavanMudigonda.github.io/html-reporter-github-pages/${{ github.run_number }}
 ```
 
+## COMPOSITE WORKFLOW ADDED AS DOCKER ACTION IS NOT WORKING FOR WINDOWS RUNNERS
+
+## Inputs
+
+This Action defines the following formal inputs.
+
+| Name | Required | Default | Description
+|-|-|-|-|
+| **`test_results`** | true | none | provide name of the folder that has got the index.html and other static files to deploy on GH Pages. Example if my folder that has got all my test results is html-report then i would enter "html-report" as input value.
+| **`subfolder`** | false | none | Provide the subfolder in case if your files that have index.html and other static content in present in subfolder. say i have a folder called "archive" and under that i have subfolder "html-report" in that case i would enter 'archive' for variable 'test_results' and 'html-report' under 'subfolder'
+| **`gh_pages`** | false | gh_pages | name of the branch where you would like to push your static content to be published. Ideally it should be called gh_pages so default it to same but you have choice to modify it.
+| **`keep_reports`** | false | 20 |  Number of reports you would like to retain. There is a 5GB limit on Git Repo. Defaulted to 20 reports but if you but ideally you should do math to calculate how many reports you could store. if your report size is say 50 MB then you could store up to a 100 reports.
+|**`github_repo`** | false | ${{ github.repository }} | repo name that you would like to push gh-pages branch to. we default it to your curent repo where workflow is being run. If you would like to push to another repo please enter in format "XXXXXXXXX/project-awesome" in this format.
+|**`report_url`** | false | None | Enter the URL of your GitHub Pages Site. 
+
+## Outputs
+
+This Action defines the following formal outputs.
+
+| Name | How to use(value) | Description|Comments
+|-|-|-|-|
+| **`GH_PAGES_URL`**  | ${{ env.GH_PAGES_URL }} | GitHub Pages URL|you can use this to pass to subsequent patterns
+
+## Example workflow - same repo
+
+      - name: GH Pages Push
+        uses: PavanMudigonda/html-reporter-github-pages/composite@v1.1
+        with:
+          test_results: test-results
+          keep_reports: 20
+
+
+## Example workflow - different repo
+
+      - name: GH Pages Push
+        uses: PavanMudigonda/html-reporter-github-pages/composite@v1.1
+        with:
+          test_results: test-results
+          keep_reports: 20
+          external_repository: XXXXXXXX/another-awesome-repo
+
+
+
+
 ### Sample GH Pages Home Page
 
 <img width="626" alt="image" src="https://user-images.githubusercontent.com/29324338/174328988-d53bc4bd-e189-4179-8a42-2046b8c83a9b.png">
