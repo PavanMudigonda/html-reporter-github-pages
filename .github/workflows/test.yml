@@ -17,42 +17,8 @@ jobs:
         with:
           node-version: '18'
           
-      - name: List Files in workspace
-        if: always()
-        run: |
-          ls -R;
-
-      - name: Get Test Results history
-        uses: actions/checkout@v3
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Create Test Results History
-        uses: PavanMudigonda/html-reporter-github-pages@v1.0
+      - name: GH Pages Push
+        uses: PavanMudigonda/html-reporter-github-pages/composite@v1.1
         with:
           test_results: test-results
-          gh_pages: gh-pages
-          results_history: results-history
           keep_reports: 20
-
-      - name: Deploy report to Github Pages
-        if: always()
-        uses: peaceiris/actions-gh-pages@v3.8.0
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-          publish_branch: gh-pages
-          publish_dir: results-history
-          keep_files: true
-
-      - name: Post the link to the report
-        if: always()
-        uses: Sibz/github-status-action@v1
-        with: 
-            authToken: ${{secrets.GITHUB_TOKEN}}
-            context: 'Test Results Link'
-            state: 'success'
-            sha: ${{ github.sha }}
-            target_url: https://PavanMudigonda.github.io/html-reporter-github-pages/${{ github.run_number }}
