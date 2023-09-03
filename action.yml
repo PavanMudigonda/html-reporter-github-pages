@@ -218,10 +218,10 @@ runs:
         fi;
         #-------------------------------------------------------------------
         if [[ ${ORDER} != 'ascending' ]]; then
-          gh release download v0.1 --repo https://github.com/PavanMudigonda/html-reporter-github-pages
-          unzip html-reporter-github-pages-0.1.zip
-          mv html-reporter-github-pages-0.1/*.py ./
-          rm -rf html-reporter-github-pages-0.1
+          gh release download v1.2 --repo https://github.com/PavanMudigonda/html-reporter-github-pages
+          unzip html-reporter-github-pages-1.2.zip
+          mv html-reporter-github-pages-1.2/*.py ./
+          rm -rf html-reporter-github-pages-1.2
           INDEX_SCRIPT_FOLDER=$PWD
           INDEX_SCRIPT_PATH=${INDEX_SCRIPT_FOLDER}/index-html-generator.py
         elif [[ ${ORDER} == 'descending' ]]; then
