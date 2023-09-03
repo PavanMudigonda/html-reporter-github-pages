@@ -24,7 +24,7 @@ inputs:
   tool_name:
     description: 'Folder for results history'
     required: false
-    default: ''  
+    default: 'test-reports'  
   workflow_name:
     description: 'Folder for results history'
     required: false
@@ -32,6 +32,7 @@ inputs:
   env:
     description: 'Environment'
     required: false
+    default: 'QA'
   subfolder:
     description: 'subfolder'
     required: false
