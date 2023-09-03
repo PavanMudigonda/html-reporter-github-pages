@@ -18,7 +18,12 @@ jobs:
           node-version: '18'
           
       - name: GH Pages Push
-        uses: PavanMudigonda/html-reporter-github-pages/composite@v1.1
+        uses: PavanMudigonda/html-reporter-github-pages@v1.2
         with:
           test_results: test-results
           keep_reports: 20
+          gh_pages: gh-pages # BRANCH NAME you like
+          subfolder: docs  # Level 1 Folder Structure you like
+          tool_name: cucumber # Level 2 Folder Structure you like
+          workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
+          env: QA # Level 4 Folder Structure you like
