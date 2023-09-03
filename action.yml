@@ -218,7 +218,7 @@ runs:
         fi;
         #-------------------------------------------------------------------
         if [[ ${ORDER} != 'ascending' ]]; then
-          gh release download v1.2 --repo https://github.com/PavanMudigonda/html-reporter-github-pages
+          gh release download v1.2 --repo https://github.com/PavanMudigonda/html-reporter-github-pages -A zip
           unzip html-reporter-github-pages-1.2.zip
           mv html-reporter-github-pages-1.2/*.py ./
           rm -rf html-reporter-github-pages-1.2
