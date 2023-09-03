@@ -5,25 +5,33 @@ branding:
   icon: 'layout'
   color: 'green'
 inputs:
-  WORKFLOW_ID:
-    description: 'Workflow File NAME'
-    required: true
-    default: ''
   token:
-    description: 'Github Token'
-    required: true
+    description: 'default Github token'
+    required: false
     default: ${{ github.token }}
   test_results:
-    description: 'test result data dir'
-    required: true
+    description: 'test result data dir. If its Allure Results Provide RAW Results to generate Allure Report'
+    default: 'test-results'
+    required: false
   gh_pages:
     description: 'Folder with gh-pages branch'
-    required: true
+    required: false
     default: 'gh-pages'
   results_history:
-    description: 'Folder for allure history'
-    required: true
+    description: 'Folder for results history'
+    required: false
     default: 'results-history'
+  tool_name:
+    description: 'Folder for results history'
+    required: false
+    default: ''  
+  workflow_name:
+    description: 'Folder for results history'
+    required: false
+    default: '${{ github.workflow }}'
+  env:
+    description: 'Environment'
+    required: false
   subfolder:
     description: 'subfolder'
     required: false
@@ -34,23 +42,512 @@ inputs:
     default: '20'
   github_run_num:
     description: 'GitHub Actions build number'
-    required: true
+    required: false
     default: ${{ github.run_number }}
   github_run_id:
     description: 'GitHub Actions run id'
-    required: true
+    required: false
     default: ${{ github.run_id }}
   github_repo:
     description: 'GitHub repository'
-    required: true
-  github_repo_owner:
-    description: 'GitHub repository owner'
-    required: true
-    default: ${{ github.repository_owner }}
+    required: false
+    default: ${{ github.repository }}
   report_url:
     description: 'Use a custom URL instead of *.github.io'
     required: false
-    default: ''
+    default: '' 
+  external_repository:
+    description: 'External GitHub repository'
+    required: false 
+  order:
+    description: 'Order of Folders, ascending or descending'
+    required: false
+    default: 'descending'
+  allure_report_generate_flag:
+    description: 'To Generate Allure Report using this Action'
+    required: false
+    default: 'false' 
+outputs:
+  url:
+    description: 'GH Page URL'
+    value: ${{ steps.gh_page.outputs.GITHUB_PAGES_WEBSITE_URL }}
+  latest_result_url:
+    description: 'Latest Test Result GH Pages URL'
+    value: ${{ steps.gh_page.outputs.LATEST_RUN_GH_PAGES_URL }}
+
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'composite'    
+  steps:
+    - name: check if gh cli is present
+      shell: bash
+      run: |
+        GH_VERSION=$(gh --version)
+        SEARCH_STRING='gh version'
+        if [[ "$GH_VERSION" == *"$SEARCH_STRING"* ]]; then
+          echo "GH CLI PRESENT"
+          export GH_CLI_PRESENT=false
+        else
+          export GH_CLI_PRESENT=false
+          echo "GH CLI NOT PRESENT"
+        fi;
+        echo "GH_CLI_PRESENT=${GH_CLI_PRESENT}" >> $GITHUB_ENV
+        
+    - name: Install GH CLI
+      if: ${{ env.GH_CLI_PRESENT == 'false' }}
+      uses: dev-hanz-ops/install-gh-cli-action@v0.1.0
+      with:
+        gh-cli-version: 2.33.0
+
+    - name: Java Install for Allure
+      if: ${{ inputs.allure_report_generate_flag == 'true' }}
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'corretto'
+        java-version: '11'
+          
+    - name: CheckOut Github Pages branch - same repo
+      shell: bash
+      if: ${{ inputs.external_repository == '' }}
+      env:
+        GIT_USER_EMAIL: "actions@github.com"
+        GIT_USER_NAME: "GitHub Actions"        
+      run: |
+        mkdir -p ${{ inputs.gh_pages }}
+        cd ${{ inputs.gh_pages }}
+        if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" "${{ inputs.gh_pages }}"
+        then
+            echo "REMOTE BRANCH EXISTS"
+        else
+          git config --local user.email $GIT_USER_EMAIL
+          git config --local user.name $GIT_USER_NAME        
+          git checkout --orphan ${{ inputs.gh_pages }}
+          git add -A
+          git commit -m "Created GH Pages Branch"
+          git push --set-upstream origin ${{ inputs.gh_pages }}
+        fi;
+
+    - name: Get test results history
+      if: ${{ inputs.external_repository == '' }}
+      uses: actions/checkout@v3
+      continue-on-error: true
+      with:
+        ref: ${{ inputs.gh_pages }}
+        path: ${{ inputs.gh_pages }}
+        
+    - name: clone github pages branch in github workspace - different repo
+      shell: bash
+      env:
+        GIT_USER_EMAIL: "actions@github.com"
+        GIT_USER_NAME: "GitHub Actions"      
+      # if: ${{ inputs.external_repository != '' }}
+      if: false
+      run: |
+        mkdir -p ${{ inputs.gh_pages }}
+        cd ${{ inputs.gh_pages }}
+        if git ls-remote --exit-code --heads "https://github.com/${{ inputs.external_repository }}.git" "${{ inputs.gh_pages }}"
+        then
+            echo "REMOTE BRANCH EXISTS"
+        else
+          git config --local user.email $GIT_USER_EMAIL
+          git config --local user.name $GIT_USER_NAME        
+          git checkout --orphan ${{ inputs.gh_pages }}
+          git add -A
+          git commit -m "Created GH Pages Branch"
+          git push --set-upstream origin ${{ inputs.gh_pages }}
+        fi;
+
+    - name: clone github pages branch in github workspace - external repo
+      if: ${{ inputs.external_repository != '' }}
+      uses: actions/checkout@v3
+      continue-on-error: true
+      with:
+        ref: ${{ inputs.gh_pages }}
+        path: ${{ inputs.gh_pages }}
+        repository: ${{ inputs.external_repository }}
+        token: ${{ inputs.token }}
+        
+    - name: Create Test Results History GitHub Actions Run ID wise
+      id: gh_page
+      shell: bash
+      env: 
+        ALLURE_FLAG: "${{ inputs.allure_report_generate_flag }}"      
+        ENV: "${{ inputs.env }}"
+        TOKEN: "${{ inputs.token }}"
+        GH_PAGES: "${{ inputs.gh_pages }}"
+        SUBFOLDER: "${{ inputs.subfolder }}"
+        KEEP_REPORTS: "${{ inputs.keep_reports }}"
+        GITHUB_RUN_ID: "${{ inputs.github_run_id }}"
+        REPO: "${{ inputs.github_repo }}"
+        GITHUB_REPOSITORY: "${{ github.repository }}"
+        REPORT_URL: "${{ inputs.report_url }}"
+        EXTERNAL_REPO: "${{ inputs.external_repository }}"
+        RUNNER_OS: "${{ runner.os }}"
+        GITHUB_RUN_NUM: "${{ inputs.github_run_num }}"
+        WORKFLOW_NAME: "${{ inputs.workflow_name }}"
+        TOOL_NAME: "${{ inputs.tool_name }}"
+        ORDER: "${{ inputs.oder }}"
+        GH_TOKEN: "${{ github.token }}"
+      run: |
+        export GH_PAGES_ACTION_HOME=$PWD
+        export ENV="${{ inputs.env }}"
+        export TOKEN="${{ inputs.token }}"
+        export TEST_RESULTS="${{ inputs.test_results }}"
+        export GH_PAGES="${{ inputs.gh_pages }}"
+        export SUBFOLDER="${{ inputs.subfolder }}"
+        export KEEP_REPORTS="${{ inputs.keep_reports }}"
+        export GITHUB_RUN_ID="${{ inputs.github_run_id }}"
+        export REPO="${{ inputs.github_repo }}"
+        export REPORT_URL="${{ inputs.report_url }}"
+        export EXTERNAL_REPO="${{ inputs.external_repository }}"
+        export RUNNER_OS="${{ runner.os }}"
+        export GITHUB_RUN_NUM="${{ inputs.github_run_num }}"
+        export TOOL_NAME="${{ inputs.tool_name }}"
+        export WORKFLOW_NAME="${{ inputs.workflow_name }}"
+        export ORDER="${{ inputs.order }}"
+        export GITHUB_WORKSPACE="${{ env.GITHUB_WORKSPACE }}"
+        #--------------------------------------------------------
+        cd ${{ inputs.gh_pages }}
+        if [[ "${SUBFOLDER}" != "" ]]; then
+          mkdir -p "${SUBFOLDER}"
+        fi;
+        cd ${GH_PAGES_ACTION_HOME}
+        # Set variables
+        if [[ ${{ env.ALLURE_FLAG }} == true || ${{ env.ALLURE_FLAG }} == 'true' ]]; then
+          ALLURE_REPORT="allure-report"
+        fi;
+        #-------------------------------------------------------------------
+        if [[ ${ORDER} != 'ascending' ]]; then
+          gh release download v0.1 --repo https://github.com/PavanMudigonda/html-reporter-github-pages
+          unzip html-reporter-github-pages-0.1.zip
+          mv html-reporter-github-pages-0.1/*.py ./
+          rm -rf html-reporter-github-pages-0.1
+          INDEX_SCRIPT_FOLDER=$PWD
+          INDEX_SCRIPT_PATH=${INDEX_SCRIPT_FOLDER}/index-html-generator.py
+        elif [[ ${ORDER} == 'descending' ]]; then
+          INDEX_SCRIPT_FOLDER=$PWD
+          INDEX_SCRIPT_PATH=${INDEX_SCRIPT_FOLDER}/index-html-generator-descending-order.py
+        fi;
+        chmod +x ${INDEX_SCRIPT_PATH}
+        #-------------------------------------------------------------------
+        # Check if its external repo push
+        if [[ ${EXTERNAL_REPO} != '' ]]; then
+          REPOSITORY_OWNER_SLASH_NAME=${EXTERNAL_REPO}
+        elif [[ ${EXTERNAL_REPO} == '' ]]; then
+          REPOSITORY_OWNER_SLASH_NAME=${GITHUB_REPOSITORY}
+        fi;
+        #-------------------------------------------------------------------
+        delete_folders_func () {
+          COUNT=$( ( ls | wc -l ) )
+          echo "count folders in results-history: ${COUNT}"
+          echo "keep reports count ${KEEP_REPORTS}"
+          KEEP_REPORTS=$((KEEP_REPORTS+1))
+          echo "if ${COUNT} > ${KEEP_REPORTS}"
+          if (( COUNT > KEEP_REPORTS )); then
+            echo "remove old reports"
+            ls | sort -n | head -n -$((${KEEP_REPORTS}-2)) | xargs rm -rv;
+            if [ -f index.html ]; then
+              echo "remove index.html"
+              rm index.html -rv
+            fi;
+            if [ -d last-history ]; then
+              echo "remove last-history folder"
+              rm last-history -rv
+            fi;            
+          fi;
+        }
+        #-------------------------------------------------------------------
+        EXTERNAL_REPO_OWNER_SLASH_NAME=${{ inputs.external_repository }}
+        EXTERNAL_REPO_NAME=${EXTERNAL_REPO_OWNER_SLASH_NAME##*/}
+        if [[ "${EXTERNAL_REPO_NAME}" == '' ]]; 
+        then
+          GH_PAGES_API="https://api.github.com/repos/${{ github.repository }}/pages"
+        elif [[ "${{ inputs.external_repository }}" != '' ]]
+        then
+          GH_PAGES_API="https://api.github.com/repos/${{ inputs.external_repository }}/pages"
+        fi
+        curl -s -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ inputs.token }} " $GH_PAGES_API > gh-pages.json
+        REPORT_URL=${REPORT_URL}
+        #-------------------------------------------------------------------
+        if [[ ${REPORT_URL} != '' ]]; then
+            REPORT_URL="${REPORT_URL}"
+            echo "Replacing github pages url. NEW url ${REPORT_URL}"
+        else
+            REPORT_URL=$(jq -r '.html_url' gh-pages.json | tr -d '"' | xargs)
+            REPORT_URL="${REPORT_URL%/}"
+            echo $REPORT_URL
+            echo REPORT_URL=$REPORT_URL >> $GITHUB_ENV
+             echo "#### GitHub Pages HTML Reports" >> $GITHUB_STEP_SUMMARY
+            echo "REPORT_URL=${REPORT_URL}" >> $GITHUB_OUTPUT        
+        fi;
+        #-------------------------------------------------------------------
+        # Identify where the current report should be copied to
+        if [[ "${SUBFOLDER}" != "" ]]; then
+          GH_PAGES="${GH_PAGES}/${SUBFOLDER}"
+          mkdir -p ${GH_PAGES}
+        fi;
+        if [[ "${TOOL_NAME}" != "" ]]; then
+            GH_PAGES="${GH_PAGES}/${TOOL_NAME}"
+            GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${TOOL_NAME}"
+            mkdir -p ${GH_PAGES}
+        else
+            GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}"
+        fi;
+        if [[ "${WORKFLOW_NAME}" != "" ]]; then
+            GH_PAGES="${GH_PAGES}/${WORKFLOW_NAME}"
+            GITHUB_PAGES_WEBSITE_URL="${GITHUB_PAGES_WEBSITE_URL}/${WORKFLOW_NAME}"
+            mkdir -p ${GH_PAGES}
+        fi;
+        if [[ "${ENV}" != "" ]]; then
+            GH_PAGES="${GH_PAGES}/${ENV}"
+            GITHUB_PAGES_WEBSITE_URL="${GITHUB_PAGES_WEBSITE_URL}/${ENV}"
+            mkdir -p ${GH_PAGES}
+        fi;
+        #-------------------------------------------------------------------        
+        create_executor_json_func () {
+          #echo "executor.json"
+          echo '{"name":"GitHub Actions","type":"github","reportName":"TR Test Reporting",' > executor.json
+          echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
+          echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${GITHUB_RUN_NUM}/\"," >> executor.json
+          echo "\"buildUrl\":\"https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"," >> executor.json
+          echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_ID}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json        
+          echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_NUM}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json
+          echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> environment.properties
+          cat executor.json
+          cat environment.properties
+        }
+        #-------------------------------------------------------------------
+        copy_current_results_func () {
+          mkdir -p ./${GH_PAGES}/${GITHUB_RUN_NUM}
+          if [[ ${{ env.ALLURE_FLAG }} == false || ${{ env.ALLURE_FLAG }} == 'false' || ${{ env.ALLURE_FLAG }} == '' ]]; then
+            cp -r ${GH_PAGES_ACTION_HOME}/${ALLURE_REPORT}/. ./${GH_PAGES}/${GITHUB_RUN_NUM}  
+          fi;
+        }
+        #-------------------------------------------------------------------
+        generate_index_html_func () {
+          python3 ${INDEX_SCRIPT_PATH}
+          echo "Completed index html generation"
+        }
+        #-------------------------------------------------------------------
+        echo "current path: $PWD"
+        mkdir -p ./${GH_PAGES}
+        mkdir -p ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}
+        echo "NEW results history folder ${GH_PAGES}"
+        echo "New GH_PAGES folder: ${GH_PAGES}"
+        echo "NEW github pages url ${GITHUB_PAGES_WEBSITE_URL}"       
+        echo "GH_PAGES=${GH_PAGES}" >> $GITHUB_ENV
+        echo "GITHUB_PAGES_WEBSITE_URL=${GITHUB_PAGES_WEBSITE_URL}" >> $GITHUB_ENV
+        echo "GITHUB_PAGES_WEBSITE_URL=${GITHUB_PAGES_WEBSITE_URL}" >> $GITHUB_OUTPUT
+        #-------------------------------------------------------------------
+        echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_OUTPUT
+        # Publish Job Summary
+        echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
+        echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_STEP_SUMMARY
+        #-------------------------------------------------------------------
+        # First Run Delete Function
+        cd ./${GH_PAGES}
+        delete_folders_func
+        cd $GH_PAGES_ACTION_HOME
+        #-------------------------------------------------------------------
+        # Copy current test-results for staging
+        copy_current_results_func
+        #-------------------------------------------------------------------   
+        # Generate Final FOLDER STRUCTURE at lowest level
+        cd ./${GH_PAGES}
+        generate_index_html_func
+        cd $GH_PAGES_ACTION_HOME
+        #-------------------------------------------------------------------   
+        if [[ ${SUBFOLDER} == "" ]]; then
+          cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}
+          generate_index_html_func
+          cd $GH_PAGES_ACTION_HOME
+        fi;
+        if [[ ${SUBFOLDER} != "" ]]; then
+            cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}
+            generate_index_html_func
+            cd $GH_PAGES_ACTION_HOME
+            if [[ ${TOOL_NAME} != "" ]]; then
+                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}//${SUBFOLDER}/${TOOL_NAME}
+                generate_index_html_func
+                cd $GH_PAGES_ACTION_HOME
+            fi;
+            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
+                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}
+                generate_index_html_func
+                cd $GH_PAGES_ACTION_HOME
+            fi;
+            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
+                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}
+                generate_index_html_func
+                cd $GH_PAGES_ACTION_HOME
+            fi;          
+        fi;
+        if [[ ${SUBFOLDER} == "" ]]; then
+            if [[ ${TOOL_NAME} != "" ]]; then
+                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}
+                generate_index_html_func
+                cd $GH_PAGES_ACTION_HOME
+            fi;
+            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
+                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}
+                generate_index_html_func
+                cd $GH_PAGES_ACTION_HOME
+            fi;
+            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
+                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}
+                generate_index_html_func
+                cd $GH_PAGES_ACTION_HOME
+            fi;
+        fi;
+        #-------------------------------------------------------------------
+        cd $GH_PAGES_ACTION_HOME
+        # Manage History and Last History Folders
+        # Create History folder just in case if its not present.
+        # For Allure Reports it would be present by default
+        # For other reports it will not be present
+        mkdir -p ./${GH_PAGES}/${GITHUB_RUN_NUM}/history
+        #-------------------------------------------------------------------
+        cd $GH_PAGES_ACTION_HOME
+        cd ./${GH_PAGES}
+        if [ -d last-history ]; then
+           #Copy Last History from previous run in to Allure Results Folder for Allure Report Generation
+           cp -r ./last-history/. ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}/history
+        fi;
+        #--------------------------------------------------------------------
+        # Allure Report Generation
+        if [[ ${{ env.ALLURE_FLAG }} == true || ${{ env.ALLURE_FLAG }} == 'true' ]]; then
+          cd $GH_PAGES_ACTION_HOME
+          npm -g install allure-commandline
+          npx allure --version
+          # cd ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}
+          # create_executor_json_func
+          #cd ..
+          #cd ${GIHUB_WORKSPACE}
+          npx allure generate ${{ inputs.test_results }} -o allure-report
+          # finally copy allure report
+          cp -r allure-report/. ${GH_PAGES}/${GITHUB_RUN_NUM}
+          # Create Last History Folder if its not present
+          mkdir -p ./${GH_PAGES}/last-history
+          # Create History folder in Test Results just in case so next command copy won't fail
+          mkdir -p ${GH_PAGES}/${GITHUB_RUN_NUM}/history
+          # Move files from Last History folder to History folder inside the most latest run that is currently being run right now
+          # This is to show up history and retires information under Allure Reports
+          if [ -d ./${GH_PAGES}/last-history ]; then
+            cp -r ./allure-report/history/. ./${GH_PAGES}/last-history
+          else
+            mkdir ./${GH_PAGES}/last-history
+            cp -r ./allure-report/history/. ./${GH_PAGES}/last-history
+          fi;
+        fi;
+        #--------------------------------------------------------------------
+
+    - name: Deploy report to Github Pages
+      if: ${{ inputs.external_repository == '' && inputs.subfolder == '' }}
+      uses: peaceiris/actions-gh-pages@v3.9.3
+      with:
+        github_token: ${{ inputs.token }}
+        publish_branch: ${{ inputs.gh_pages }}
+        keep_files: false
+        publish_dir: ${{ inputs.gh_pages }}
+        allow_empty_commit: true
+
+    - name: Deploy report to Github Pages
+      if: ${{ inputs.external_repository != '' && inputs.subfolder == '' }}
+      uses: peaceiris/actions-gh-pages@v3.9.3
+      with:
+        personal_token: ${{ inputs.token }}
+        publish_branch: ${{ inputs.gh_pages }}
+        external_repository: ${{ inputs.external_repository }}
+        keep_files: false
+        publish_dir: ${{ inputs.gh_pages }}
+        allow_empty_commit: true
+
+    - name: Deploy report to Github Pages
+      if: ${{ inputs.external_repository == '' && inputs.subfolder != '' }}
+      uses: peaceiris/actions-gh-pages@v3.9.3
+      with:
+        github_token: ${{ inputs.token }}
+        publish_branch: ${{ inputs.gh_pages }}
+        publish_dir: ${{ inputs.gh_pages }}/${{ inputs.subfolder }}
+        keep_files: false
+        destination_dir: ${{ inputs.subfolder }}
+        allow_empty_commit: true
+
+    - name: Deploy report to Github Pages
+      if: ${{ inputs.external_repository != '' && inputs.subfolder != '' }}
+      uses: peaceiris/actions-gh-pages@v3.9.3
+      with:
+        personal_token: ${{ inputs.token }}
+        publish_branch: ${{ inputs.gh_pages }}
+        publish_dir: ${{ inputs.gh_pages }}/${{ inputs.subfolder }}
+        external_repository: ${{ inputs.external_repository }}
+        keep_files: false
+        destination_dir: ${{ inputs.subfolder }}
+        allow_empty_commit: true
+       
+    - name: generate github pages site - same repo
+      if: ${{ inputs.external_repository == '' }}
+      shell: bash
+      env: 
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        #----------------------------------------------------------
+        # FINALLY DO THE GH PAGES SITE CREATION
+        #----------------------------------------------------------
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          repos/${GITHUB_REPOSITORY}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
+        GH_SITE_MESSAGE=$(cat ${GITHUB_WORKSPACE}/gh-pages.json | jq '.message' | xargs)
+        if [ "${GH_SITE_PRESENT}" == 'Not Found' ]; then
+            curl \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}"\
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/${GITHUB_REPOSITORY}/pages \
+              -d `{"source":{"branch":"${{ inputs.gh_pages }}","path":"/${{ inputs.SUBFOLDER }}"}}`
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              repos/${GITHUB_REPOSITORY}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
+            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
+            REPORT_URL="${REPORT_URL%/}"
+            echo "Your GitHub Pages URL: $REPORT_URL"
+        else
+            echo "site already present"
+            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
+            REPORT_URL="${REPORT_URL%/}"
+            echo "Your GitHub Pages URL: $REPORT_URL"
+        fi;
+
+    - name: generate github pages site - different repo
+      shell: bash
+      if: ${{ inputs.external_repository != '' }}
+      env: 
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        #-----------------------------------------------------------------------------------------------------------------------------------------------------
+        # FINALLY DO THE GH PAGES SITE CREATION
+        #-----------------------------------------------------------------------------------------------------------------------------------------------------
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          /repos/${{ inputs.external_repository }}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
+        GH_SITE_MESSAGE=$(cat ${GITHUB_WORKSPACE}/gh-pages.json | jq '.message' | xargs)
+        if [ "${GH_SITE_PRESENT}" == 'Not Found' ]; then
+            curl \
+              -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}"\
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/${{ inputs.external_repository }}/pages \
+              -d `{"source":{"branch":"${{ inputs.gh_pages }}","path":"/${{ inputs.SUBFOLDER }}"}}`
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ inputs.external_repository }}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
+            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
+            REPORT_URL="${REPORT_URL%/}"
+            echo "Your GitHub Pages URL: $REPORT_URL"
+        else
+            echo "site already present"
+            REPORT_URL=$(jq -r '.html_url' ${{ inputs.external_repository }}/gh-pages.json | tr -d '"' | xargs)
+            REPORT_URL="${REPORT_URL%/}"
+            echo "Your GitHub Pages URL: $REPORT_URL"
+        fi;
