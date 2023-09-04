@@ -73,3 +73,21 @@ This Action defines the following formal outputs.
           subfolder: docs  # Level 1 Folder Structure you like
           tool_name: allure # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
+
+## Demo https://pavanmudigonda.github.io/html-reporter-github-pages/
+
+<img width="1397" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/ca3af1f9-9134-4bb3-895c-b7ee4f6009b7">
+<img width="1359" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/a525e133-9cd4-483f-aafb-3890121d7840">
+<img width="1389" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/b48061c7-de68-4526-81d2-45cd031f8380">
+<img width="1413" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/36a20555-a154-4856-a117-6eff9c92d89c">
+<img width="1391" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/a577a6fd-71f0-47df-8754-90c1c7a2d698">
+<img width="1412" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/2213758d-9b1f-4792-8bbd-5456eed87b5e">
+<img width="1365" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/ea45736f-373f-4875-bcf7-bf6197b1e579">
+<img width="1195" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/71e7c6d3-d695-4e34-aba1-36d7b05f0922">
+
+
+
+
+
+
+
