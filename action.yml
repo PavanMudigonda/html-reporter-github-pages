@@ -320,7 +320,7 @@ runs:
         copy_current_results_func () {
           mkdir -p ./${GH_PAGES}/${GITHUB_RUN_NUM}
           if [[ ${{ env.ALLURE_FLAG }} == false || ${{ env.ALLURE_FLAG }} == 'false' || ${{ env.ALLURE_FLAG }} == '' ]]; then
-            cp -r ${GH_PAGES_ACTION_HOME}/${ALLURE_REPORT}/. ./${GH_PAGES}/${GITHUB_RUN_NUM}  
+            cp -r ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}/. ./${GH_PAGES}/${GITHUB_RUN_NUM}  
           fi;
         }
         #-------------------------------------------------------------------
