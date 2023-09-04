@@ -1,5 +1,7 @@
 ## PavanMudigonda/html-reporter-github-pages
-New Improved GitHub Pages HTML Reporter
+a) This is a New and Improved GitHub Pages HTML Reporter
+b) To migrate to new action, please follow below documentation
+c) For support please create a Issue in this repo
 
 ## Inputs
 
@@ -33,7 +35,7 @@ This Action defines the following formal outputs.
 ## Example workflow - same repo
 
       - name: ANY REPROT - GH Pages Push - SAME REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.0
+        uses: PavanMudigonda/html-reporter-github-pages@v1.2
         with:
           test_results: test-results
           keep_reports: 20
@@ -48,7 +50,7 @@ This Action defines the following formal outputs.
 
 
       - name: ANY REPORT - GH Pages Push - ANOTHER REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.0
+        uses: PavanMudigonda/html-reporter-github-pages@v1.2
         with:
           test_results: test-results
           keep_reports: 20
@@ -64,7 +66,7 @@ This Action defines the following formal outputs.
 ## ALLURE REPORT EXAMPLE - Same Repo
 
       - name: ALLURE REPORT - GH Pages Push - SAME REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.0
+        uses: PavanMudigonda/html-reporter-github-pages@v1.2
         with:
           test_results: allure-results
           allure_report_generate_flag: true
