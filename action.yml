@@ -267,7 +267,6 @@ runs:
           GH_PAGES_API="https://api.github.com/repos/${{ inputs.external_repository }}/pages"
         fi
         curl -s -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ inputs.token }} " $GH_PAGES_API > gh-pages.json
-        REPORT_URL=${REPORT_URL}
         #-------------------------------------------------------------------
         if [[ ${REPORT_URL} != '' ]]; then
             REPORT_URL="${REPORT_URL}"
@@ -496,8 +495,8 @@ runs:
         #----------------------------------------------------------
         gh api \
           -H "Accept: application/vnd.github+json" \
-          repos/${GITHUB_REPOSITORY}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-        GH_SITE_MESSAGE=$(cat ${GITHUB_WORKSPACE}/gh-pages.json | jq '.message' | xargs)
+          repos/${GITHUB_REPOSITORY}/pages > ${{ env.GITHUB_WORKSPACE }}/gh-pages.json
+        GH_SITE_MESSAGE=$(cat ${{ env.GITHUB_WORKSPACE }}/gh-pages.json | jq '.message' | xargs)
         if [ "${GH_SITE_PRESENT}" == 'Not Found' ]; then
             curl \
               -X POST \
@@ -508,13 +507,13 @@ runs:
               -d `{"source":{"branch":"${{ inputs.gh_pages }}","path":"/${{ inputs.SUBFOLDER }}"}}`
             gh api \
               -H "Accept: application/vnd.github+json" \
-              repos/${GITHUB_REPOSITORY}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
+              repos/${GITHUB_REPOSITORY}/pages > ${{ env.GITHUB_WORKSPACE }}/gh-pages.json
+            REPORT_URL=$(jq -r '.html_url' ${{ env.GITHUB_WORKSPACE }}/gh-pages.json | tr -d '"' | xargs)
             REPORT_URL="${REPORT_URL%/}"
             echo "Your GitHub Pages URL: $REPORT_URL"
         else
             echo "site already present"
-            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
+            REPORT_URL=$(jq -r '.html_url' ${{ env.GITHUB_WORKSPACE }}/gh-pages.json | tr -d '"' | xargs)
             REPORT_URL="${REPORT_URL%/}"
             echo "Your GitHub Pages URL: $REPORT_URL"
         fi;
@@ -530,8 +529,8 @@ runs:
         #-----------------------------------------------------------------------------------------------------------------------------------------------------
         gh api \
           -H "Accept: application/vnd.github+json" \
-          /repos/${{ inputs.external_repository }}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-        GH_SITE_MESSAGE=$(cat ${GITHUB_WORKSPACE}/gh-pages.json | jq '.message' | xargs)
+          /repos/${{ inputs.external_repository }}/pages > ${{ env.GITHUB_WORKSPACE }}/gh-pages.json
+        GH_SITE_MESSAGE=$(cat ${{ env.GITHUB_WORKSPACE }}/gh-pages.json | jq '.message' | xargs)
         if [ "${GH_SITE_PRESENT}" == 'Not Found' ]; then
             curl \
               -X POST \
@@ -542,8 +541,8 @@ runs:
               -d `{"source":{"branch":"${{ inputs.gh_pages }}","path":"/${{ inputs.SUBFOLDER }}"}}`
             gh api \
               -H "Accept: application/vnd.github+json" \
-              /repos/${{ inputs.external_repository }}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
+              /repos/${{ inputs.external_repository }}/pages > ${{ env.GITHUB_WORKSPACE }}/gh-pages.json
+            REPORT_URL=$(jq -r '.html_url' ${{ env.GITHUB_WORKSPACE }}/gh-pages.json | tr -d '"' | xargs)
             REPORT_URL="${REPORT_URL%/}"
             echo "Your GitHub Pages URL: $REPORT_URL"
         else
