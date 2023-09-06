@@ -6,6 +6,8 @@ b) To migrate to new action, please follow below documentation
 
 c) For support please create a Issue in this repo
 
+**If you like my Github Action, please STAR ⭐ it**
+
 ## Example workflow - same repo
 
       - name: ANY REPROT - GH Pages Push - SAME REPO
