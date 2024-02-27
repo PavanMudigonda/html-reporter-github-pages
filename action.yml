@@ -24,7 +24,7 @@ inputs:
   tool_name:
     description: 'Folder for results history'
     required: false
-    default: 'test-reports'  
+    default: 'test-reports'
   workflow_name:
     description: 'Folder for results history'
     required: false
@@ -56,10 +56,10 @@ inputs:
   report_url:
     description: 'Use a custom URL instead of *.github.io'
     required: false
-    default: '' 
+    default: ''
   external_repository:
     description: 'External GitHub repository'
-    required: false 
+    required: false
   order:
     description: 'Order of Folders, ascending or descending'
     required: false
@@ -67,7 +67,7 @@ inputs:
   allure_report_generate_flag:
     description: 'To Generate Allure Report using this Action'
     required: false
-    default: 'false' 
+    default: 'false'
 outputs:
   url:
     description: 'GH Page URL'
@@ -77,7 +77,7 @@ outputs:
     value: ${{ steps.gh_page.outputs.LATEST_RUN_GH_PAGES_URL }}
 
 runs:
-  using: 'composite'    
+  using: 'composite'
   steps:
     - name: check if gh cli is present
       shell: bash
@@ -92,7 +92,7 @@ runs:
           echo "GH CLI NOT PRESENT"
         fi;
         echo "GH_CLI_PRESENT=${GH_CLI_PRESENT}" >> $GITHUB_ENV
-        
+
     - name: Install GH CLI
       if: ${{ env.GH_CLI_PRESENT == 'false' }}
       uses: dev-hanz-ops/install-gh-cli-action@v0.1.0
@@ -105,13 +105,13 @@ runs:
       with:
         distribution: 'corretto'
         java-version: '11'
-          
+
     - name: CheckOut Github Pages branch - same repo
       shell: bash
       if: ${{ inputs.external_repository == '' }}
       env:
         GIT_USER_EMAIL: "actions@github.com"
-        GIT_USER_NAME: "GitHub Actions"        
+        GIT_USER_NAME: "GitHub Actions"
       run: |
         mkdir -p ${{ inputs.gh_pages }}
         cd ${{ inputs.gh_pages }}
@@ -134,12 +134,12 @@ runs:
       with:
         ref: ${{ inputs.gh_pages }}
         path: ${{ inputs.gh_pages }}
-        
+
     - name: clone github pages branch in github workspace - different repo
       shell: bash
       env:
         GIT_USER_EMAIL: "actions@github.com"
-        GIT_USER_NAME: "GitHub Actions"      
+        GIT_USER_NAME: "GitHub Actions"
       # if: ${{ inputs.external_repository != '' }}
       if: false
       run: |
@@ -166,12 +166,12 @@ runs:
         path: ${{ inputs.gh_pages }}
         repository: ${{ inputs.external_repository }}
         token: ${{ inputs.token }}
-        
+
     - name: Create Test Results History GitHub Actions Run ID wise
       id: gh_page
       shell: bash
-      env: 
-        ALLURE_FLAG: "${{ inputs.allure_report_generate_flag }}"      
+      env:
+        ALLURE_FLAG: "${{ inputs.allure_report_generate_flag }}"
         ENV: "${{ inputs.env }}"
         TOKEN: "${{ inputs.token }}"
         GH_PAGES: "${{ inputs.gh_pages }}"
@@ -218,7 +218,7 @@ runs:
         fi;
         #-------------------------------------------------------------------
         if [[ ${ORDER} != 'ascending' ]]; then
-          gh release download v1.2 --repo https://github.com/PavanMudigonda/html-reporter-github-pages -A zip
+          gh release download v1.2 --skip-existing --repo https://github.com/PavanMudigonda/html-reporter-github-pages -A zip
           unzip html-reporter-github-pages-1.2.zip
           mv html-reporter-github-pages-1.2/*.py ./
           rm -rf html-reporter-github-pages-1.2
@@ -483,11 +483,11 @@ runs:
         keep_files: false
         destination_dir: ${{ inputs.subfolder }}
         allow_empty_commit: true
-       
+
     - name: generate github pages site - same repo
       if: ${{ inputs.external_repository == '' }}
       shell: bash
-      env: 
+      env:
         GH_TOKEN: ${{ github.token }}
       run: |
         #----------------------------------------------------------
@@ -521,7 +521,7 @@ runs:
     - name: generate github pages site - different repo
       shell: bash
       if: ${{ inputs.external_repository != '' }}
-      env: 
+      env:
         GH_TOKEN: ${{ github.token }}
       run: |
         #-----------------------------------------------------------------------------------------------------------------------------------------------------
