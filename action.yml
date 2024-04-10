@@ -95,7 +95,7 @@ runs:
 
     - name: Install GH CLI
       if: ${{ env.GH_CLI_PRESENT == 'false' }}
-      uses: dev-hanz-ops/install-gh-cli-action@v0.1.0
+      uses: dev-hanz-ops/install-gh-cli-action@v0.2.0
       with:
         gh-cli-version: 2.33.0
 
@@ -129,7 +129,7 @@ runs:
 
     - name: Get test results history
       if: ${{ inputs.external_repository == '' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       continue-on-error: true
       with:
         ref: ${{ inputs.gh_pages }}
@@ -159,7 +159,7 @@ runs:
 
     - name: clone github pages branch in github workspace - external repo
       if: ${{ inputs.external_repository != '' }}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       continue-on-error: true
       with:
         ref: ${{ inputs.gh_pages }}
@@ -442,7 +442,7 @@ runs:
 
     - name: Deploy report to Github Pages
       if: ${{ inputs.external_repository == '' && inputs.subfolder == '' }}
-      uses: peaceiris/actions-gh-pages@v3.9.3
+      uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         github_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
@@ -452,7 +452,7 @@ runs:
 
     - name: Deploy report to Github Pages
       if: ${{ inputs.external_repository != '' && inputs.subfolder == '' }}
-      uses: peaceiris/actions-gh-pages@v3.9.3
+      uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         personal_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
@@ -463,7 +463,7 @@ runs:
 
     - name: Deploy report to Github Pages
       if: ${{ inputs.external_repository == '' && inputs.subfolder != '' }}
-      uses: peaceiris/actions-gh-pages@v3.9.3
+      uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         github_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
@@ -474,7 +474,7 @@ runs:
 
     - name: Deploy report to Github Pages
       if: ${{ inputs.external_repository != '' && inputs.subfolder != '' }}
-      uses: peaceiris/actions-gh-pages@v3.9.3
+      uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         personal_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
