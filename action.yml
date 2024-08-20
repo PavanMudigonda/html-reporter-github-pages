@@ -547,7 +547,7 @@ runs:
             echo "Your GitHub Pages URL: $REPORT_URL"
         else
             echo "site already present"
-            REPORT_URL=$(jq -r '.html_url' ${{ inputs.external_repository }}/gh-pages.json | tr -d '"' | xargs)
+            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
             REPORT_URL="${REPORT_URL%/}"
             echo "Your GitHub Pages URL: $REPORT_URL"
         fi;
