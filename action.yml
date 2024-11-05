@@ -79,6 +79,18 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: check if its windows or mac or linux runner
+      shell: bash
+      run: |
+        echo "Runner OS: ${{ runner.os }}"
+        RUNNER_OS=$( echo ${{ runner.os }} | tr '[:upper:]' '[:lower:]' )
+
+    - name: install gh cli for macos
+      if: ${{ env.GH_CLI_PRESENT == 'false' && runner.os == 'macos' }}
+      shell: bash
+      run: |
+        brew install gh
+
     - name: check if gh cli is present
       shell: bash
       run: |
@@ -94,7 +106,7 @@ runs:
         echo "GH_CLI_PRESENT=${GH_CLI_PRESENT}" >> $GITHUB_ENV
 
     - name: Install GH CLI
-      if: ${{ env.GH_CLI_PRESENT == 'false' }}
+      if: ${{ env.GH_CLI_PRESENT == 'false' && runner.os == 'Linux' }}
       uses: dev-hanz-ops/install-gh-cli-action@v0.2.0
       with:
         gh-cli-version: 2.33.0
