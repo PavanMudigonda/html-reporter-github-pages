@@ -1,4 +1,4 @@
-## PavanMudigonda/html-reporter-github-pages
+# PavanMudigonda/html-reporter-github-pages@v1.4
 
 a) This is a New and Improved GitHub Pages HTML Reporter
 
