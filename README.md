@@ -11,7 +11,7 @@ c) For support please create a Issue in this repo
 ## Example workflow - same repo
 
       - name: ANY REPROT - GH Pages Push - SAME REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.3
+        uses: PavanMudigonda/html-reporter-github-pages@v1.4
         with:
           test_results: test-results
           keep_reports: 20
@@ -26,7 +26,7 @@ c) For support please create a Issue in this repo
 
 
       - name: ANY REPORT - GH Pages Push - ANOTHER REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.3
+        uses: PavanMudigonda/html-reporter-github-pages@v1.4
         with:
           test_results: test-results
           keep_reports: 20
@@ -42,7 +42,7 @@ c) For support please create a Issue in this repo
 ## ALLURE REPORT EXAMPLE - Same Repo
 
       - name: ALLURE REPORT - GH Pages Push - SAME REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.3
+        uses: PavanMudigonda/html-reporter-github-pages@v1.4
         with:
           test_results: allure-results
           allure_report_generate_flag: true
