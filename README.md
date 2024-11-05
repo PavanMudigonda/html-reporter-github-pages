@@ -20,6 +20,7 @@ c) For support please create a Issue in this repo
           tool_name: cucumber # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
+          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Person Access Token to perform gh pages deploy
 
 
 ## Example workflow - different repo
@@ -36,7 +37,7 @@ c) For support please create a Issue in this repo
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
           external_repository: PavanMudigonda/another-awesome-repo
-          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Person Access Token to push to another repo. 
+          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Person Access Token to perform gh pages deploy and to commit to another repo
           
 
 ## ALLURE REPORT EXAMPLE - Same Repo
@@ -51,6 +52,7 @@ c) For support please create a Issue in this repo
           subfolder: docs  # Level 1 Folder Structure you like
           tool_name: allure # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
+          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Person Access Token to perform gh pages deploy
 
 ## Demo https://pavanmudigonda.github.io/html-reporter-github-pages/
 
@@ -81,6 +83,7 @@ This Action defines the following formal inputs.
 |**`env`** | false | None | This is for level 4 Folder Structure. you can overwrite with some other value. we don't care.
 |**`order`** | true | descending | Order of Folders, ascending or descending.
 |**`allure_report_generate_flag`** | false | false | If you are working with Allure and if you would like to have this action generate Allure Report out of the RAW Results, then select True. Make sure you provide Allure RAW Results Path for input **test_results**
+| **`test_results`** | true | GITHUB_TOKEN | Please note we need GitHub Person Access Token to perform gh pages deploy and to commit to another repo. The default GITHUB_TOKEN doesn't have deployment and commit to another repo permissions.
 
 ## Outputs
 
