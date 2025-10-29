@@ -433,7 +433,7 @@ runs:
             generate_index_html_func
             cd $GH_PAGES_ACTION_HOME
             if [[ ${TOOL_NAME} != "" ]]; then
-                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}//${SUBFOLDER}/${TOOL_NAME}
+                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}
                 generate_index_html_func
                 cd $GH_PAGES_ACTION_HOME
             fi;
