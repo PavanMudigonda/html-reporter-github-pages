@@ -1,28 +1,4 @@
 #!/usr/bin/env python3
-# ---
-# Copyright 2020 glowinthedark
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-#
-# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#
-# See the License for the specific language governing permissions and limitations under the License.
-# ---
-#
-# Generate index.html files for
-# all subdirectories in a directory tree.
-
-# handle symlinked files and folders: displayed with custom icons
-
-# By default only the current folder is processed and hidden files (starting with a dot) are skipped.
-# To force inclusion of hidden files pass --include-hidden.
-
-# Use -r or --recursive to process nested folders.
 
 import argparse
 import datetime
@@ -54,7 +30,7 @@ def process_dir(top_dir, opts):
 <html>
 <head>
     <meta charset="utf-8">
-    <title>TEST REPORT</title>
+    <title>Test Report</title>
     <link rel="favicon" type="image/x-icon" href="favicon.ico">    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -343,7 +319,7 @@ def process_dir(top_dir, opts):
                  """)
 
     # sort dirs first
-    sorted_entries = sorted(path_top_dir.glob(glob_patt), key=lambda p: (p.is_file(), p.name), reverse=True)
+    sorted_entries = sorted(path_top_dir.glob(glob_patt), key=lambda p: (p.is_file(), p.name))
 
     entry: Path
     for entry in sorted_entries:

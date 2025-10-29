@@ -1,5 +1,5 @@
 name: 'html-reporter-github-pages'
-description: 'HTML Test Results with history'
+description: 'GitHub Pages HTML Test Results History - Static Website'
 author: 'Pavan Mudigonda'
 branding:
   icon: 'layout'
@@ -24,7 +24,7 @@ inputs:
   tool_name:
     description: 'Folder for results history'
     required: false
-    default: 'test-reports'
+    default: ''  
   workflow_name:
     description: 'Folder for results history'
     required: false
@@ -32,11 +32,10 @@ inputs:
   env:
     description: 'Environment'
     required: false
-    default: 'QA'
   subfolder:
     description: 'subfolder'
     required: false
-    default: ''
+    default: 'docs'
   keep_reports:
     description: 'Keep X last reports'
     required: false
@@ -56,10 +55,10 @@ inputs:
   report_url:
     description: 'Use a custom URL instead of *.github.io'
     required: false
-    default: ''
+    default: '' 
   external_repository:
     description: 'External GitHub repository'
-    required: false
+    required: false 
   order:
     description: 'Order of Folders, ascending or descending'
     required: false
@@ -68,6 +67,10 @@ inputs:
     description: 'To Generate Allure Report using this Action'
     required: false
     default: 'false'
+  use_actions_summary:
+    description: 'To write outputs to actions summary'
+    required: false
+    default: 'true'
 outputs:
   url:
     description: 'GH Page URL'
@@ -77,113 +80,152 @@ outputs:
     value: ${{ steps.gh_page.outputs.LATEST_RUN_GH_PAGES_URL }}
 
 runs:
-  using: 'composite'
+  using: 'composite'    
   steps:
-    - name: check if its windows or mac or linux runner
-      shell: bash
-      run: |
-        echo "Runner OS: ${{ runner.os }}"
-        RUNNER_OS=$( echo ${{ runner.os }} | tr '[:upper:]' '[:lower:]' )
-
-    - name: install gh cli for macos
-      if: ${{ env.GH_CLI_PRESENT == 'false' && runner.os == 'macos' }}
-      shell: bash
-      run: |
-        brew install gh
-
-    - name: check if gh cli is present
-      shell: bash
-      run: |
-        GH_VERSION=$(gh --version)
-        SEARCH_STRING='gh version'
-        if [[ "$GH_VERSION" == *"$SEARCH_STRING"* ]]; then
-          echo "GH CLI PRESENT"
-          export GH_CLI_PRESENT=false
-        else
-          export GH_CLI_PRESENT=false
-          echo "GH CLI NOT PRESENT"
-        fi;
-        echo "GH_CLI_PRESENT=${GH_CLI_PRESENT}" >> $GITHUB_ENV
-
+    - name: checkout action
+      uses: actions/checkout@v5.0.0
+      
     - name: Install GH CLI
-      if: ${{ env.GH_CLI_PRESENT == 'false' && runner.os == 'Linux' }}
-      uses: dev-hanz-ops/install-gh-cli-action@v0.2.0
+      uses: sersoft-gmbh/setup-gh-cli-action@v2.0.1
       with:
-        gh-cli-version: 2.33.0
+        version: stable
 
     - name: Java Install for Allure
-      if: ${{ inputs.allure_report_generate_flag == 'true' }}
-      uses: actions/setup-java@v3
+      if: ${{ inputs.allure_report_generate_flag == 'true' && env.JAVA_PRESENT == 'false'}}
+      uses: actions/setup-java@v4.2.1
       with:
         distribution: 'corretto'
-        java-version: '11'
+        java-version: '17'
 
-    - name: CheckOut Github Pages branch - same repo
-      shell: bash
+    - name: Create a new gh pages branch if it doesn't exist - same repo
       if: ${{ inputs.external_repository == '' }}
+      shell: bash
       env:
-        GIT_USER_EMAIL: "actions@github.com"
-        GIT_USER_NAME: "GitHub Actions"
+        GIT_USER_EMAIL: actions@github.com
+        GIT_USER_NAME: GitHub Actions
       run: |
-        mkdir -p ${{ inputs.gh_pages }}
-        cd ${{ inputs.gh_pages }}
-        if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" "${{ inputs.gh_pages }}"
-        then
-            echo "REMOTE BRANCH EXISTS"
-        else
-          git config --local user.email $GIT_USER_EMAIL
-          git config --local user.name $GIT_USER_NAME        
-          git checkout --orphan ${{ inputs.gh_pages }}
-          git add -A
-          git commit -m "Created GH Pages Branch"
-          git push --set-upstream origin ${{ inputs.gh_pages }}
+        set -e
+        CURRENT_BRANCH=$(git branch --show-current)
+        STASHED=false
+        if [[ -n $(git status -s) ]]; then
+          git stash push --keep-index --include-untracked || true
+          STASHED=true
         fi;
 
+        # Remember the current branch
+        mkdir -p gh_pages
+        cd gh_pages
+
+        # Check if the remote branch exists
+        if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" "gh_pages"; then
+          echo "REMOTE BRANCH EXISTS"
+        else
+          git config --local user.email "$GIT_USER_EMAIL"
+          git config --local user.name "$GIT_USER_NAME"
+          git switch --orphan gh_pages
+          git add .
+          git commit --allow-empty -m "Initial commit on orphan branch"
+          git config --global pull.rebase true
+          git push -u origin gh_pages
+        fi;
+
+        # Restore the stash if there was one
+        if [[ "$STASHED" == true ]]; then
+          if git stash list | grep -q "WIP"; then
+            git stash pop || true
+          else
+            echo "No stash entries found."
+          fi
+        fi;
+
+    - name: delete github pages folder if its present
+      shell: bash
+      run: |
+        # Check if the folder exists
+        if [ -d "${{ inputs.gh_pages }}" ]; then
+          echo "Folder exists. Deleting..."
+          rm -rf "${{ inputs.gh_pages }}"
+          echo "Folder deleted."
+        else
+          echo "Folder does not exist."
+        fi;
+        
     - name: Get test results history
       if: ${{ inputs.external_repository == '' }}
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.1.6
       continue-on-error: true
       with:
         ref: ${{ inputs.gh_pages }}
         path: ${{ inputs.gh_pages }}
 
-    - name: clone github pages branch in github workspace - different repo
+    - id: external-repo
       shell: bash
+      if: ${{ inputs.external_repository != '' }} 
       env:
-        GIT_USER_EMAIL: "actions@github.com"
-        GIT_USER_NAME: "GitHub Actions"
-      # if: ${{ inputs.external_repository != '' }}
-      if: false
+        GH_TOKEN: ${{ inputs.token }}
       run: |
-        mkdir -p ${{ inputs.gh_pages }}
-        cd ${{ inputs.gh_pages }}
-        if git ls-remote --exit-code --heads "https://github.com/${{ inputs.external_repository }}.git" "${{ inputs.gh_pages }}"
+        if [[ -z "${{ inputs.gh_pages }}" ]]
         then
-            echo "REMOTE BRANCH EXISTS"
+          if [[ "${{ inputs.external_repository }}" != "${{ github.repository }}" ]]
+          then
+            USING="main"
+          else
+            USING="$(gh api /repos/${{ inputs.external_repository }}/commits/${{ github.sha }}/branches-where-head --jq '.[0].name')"
+          fi
+          echo "::notice::Checkout: ${{ inputs.external_repository }} using ${USING}"
+          echo "ref-exists=true" >> $GITHUB_ENV
         else
-          git config --local user.email $GIT_USER_EMAIL
-          git config --local user.name $GIT_USER_NAME        
-          git checkout --orphan ${{ inputs.gh_pages }}
-          git add -A
-          git commit -m "Created GH Pages Branch"
-          git push --set-upstream origin ${{ inputs.gh_pages }}
-        fi;
+          if git ls-remote --heads --quiet --exit-code "https://${{ inputs.token }}@github.com/${{ inputs.external_repository }}.git" ${{ inputs.gh_pages }}
+          then
+            echo "::notice::Checkout: ${{ inputs.external_repository }} using ${{ inputs.gh_pages }}"
+            echo "ref-exists=true" >> $GITHUB_ENV
+          else
+            USING="$(gh api /repos/${{ inputs.external_repository }} --jq '.default_branch')"
+            echo "::notice::Checkout: ${{ inputs.external_repository }} does not have ref ${{ inputs.gh_pages }} (fallback to ${USING})"
+            echo "ref-exists=false" >> $GITHUB_ENV
+            echo "default-branch=${USING}" >> $GITHUB_ENV
+          fi
+        fi
 
-    - name: clone github pages branch in github workspace - external repo
-      if: ${{ inputs.external_repository != '' }}
-      uses: actions/checkout@v4
-      continue-on-error: true
+    - if: ${{ ( steps.external-repo.outputs.ref-exists == 'true' ) && ( inputs.external_repository != '' ) }}
+      uses: actions/checkout@v5.0.0
       with:
-        ref: ${{ inputs.gh_pages }}
         path: ${{ inputs.gh_pages }}
         repository: ${{ inputs.external_repository }}
+        ref: ${{ inputs.ref }}
         token: ${{ inputs.token }}
+
+    - if: ${{ ( steps.external-repo.outputs.ref-exists == 'false' ) && ( inputs.external_repository != '' ) }}
+      uses: actions/checkout@v5.0.0
+      with:
+        path: ${{ inputs.gh_pages }}
+        repository: ${{ inputs.external_repository }}
+        ref: ${{ steps.external-repo.outputs.default-branch }}
+        token: ${{ inputs.token }}
+
+    - name: Create a new gh pages branch if it doesn't exist - external repo
+      shell: bash
+      if: ${{ ( inputs.external_repository != '' ) && ( steps.external-repo.outputs.ref-exists == 'false' ) }}
+      env:
+        GIT_USER_EMAIL: "actions@github.com"
+        GIT_USER_NAME: "GitHub Actions"        
+      run: |
+        echo "Creating new gh-pages branch for external repo"
+        mkdir -p ${{ inputs.gh_pages }}
+        cd ${{ inputs.gh_pages }}
+        git config --local user.email $GIT_USER_EMAIL
+        git config --local user.name $GIT_USER_NAME
+        git switch --orphan ${{ inputs.gh_pages }}
+        git add .
+        git commit --allow-empty -m "Initial commit on orphan branch"
+        git config --global pull.rebase true
+        git push -u origin ${{ inputs.gh_pages }}
 
     - name: Create Test Results History GitHub Actions Run ID wise
       id: gh_page
       shell: bash
-      env:
-        ALLURE_FLAG: "${{ inputs.allure_report_generate_flag }}"
+      env: 
+        ALLURE_FLAG: "${{ inputs.allure_report_generate_flag }}"      
         ENV: "${{ inputs.env }}"
         TOKEN: "${{ inputs.token }}"
         GH_PAGES: "${{ inputs.gh_pages }}"
@@ -196,7 +238,6 @@ runs:
         EXTERNAL_REPO: "${{ inputs.external_repository }}"
         RUNNER_OS: "${{ runner.os }}"
         GITHUB_RUN_NUM: "${{ inputs.github_run_num }}"
-        WORKFLOW_NAME: "${{ inputs.workflow_name }}"
         TOOL_NAME: "${{ inputs.tool_name }}"
         ORDER: "${{ inputs.oder }}"
         GH_TOKEN: "${{ github.token }}"
@@ -218,6 +259,7 @@ runs:
         export WORKFLOW_NAME="${{ inputs.workflow_name }}"
         export ORDER="${{ inputs.order }}"
         export GITHUB_WORKSPACE="${{ env.GITHUB_WORKSPACE }}"
+        export WORKFLOW_NAME=$(echo ${{ inputs.workflow_name }} | tr " " -)
         #--------------------------------------------------------
         cd ${{ inputs.gh_pages }}
         if [[ "${SUBFOLDER}" != "" ]]; then
@@ -230,17 +272,10 @@ runs:
         fi;
         #-------------------------------------------------------------------
         if [[ ${ORDER} != 'ascending' ]]; then
-          gh release download v1.2 --skip-existing --repo https://github.com/PavanMudigonda/html-reporter-github-pages -A zip
-          unzip html-reporter-github-pages-1.2.zip
-          mv html-reporter-github-pages-1.2/*.py ./
-          rm -rf html-reporter-github-pages-1.2
-          INDEX_SCRIPT_FOLDER=$PWD
-          INDEX_SCRIPT_PATH=${INDEX_SCRIPT_FOLDER}/index-html-generator.py
+          INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator.py
         elif [[ ${ORDER} == 'descending' ]]; then
-          INDEX_SCRIPT_FOLDER=$PWD
-          INDEX_SCRIPT_PATH=${INDEX_SCRIPT_FOLDER}/index-html-generator-descending-order.py
+          INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator-descending-order.py
         fi;
-        chmod +x ${INDEX_SCRIPT_PATH}
         #-------------------------------------------------------------------
         # Check if its external repo push
         if [[ ${EXTERNAL_REPO} != '' ]]; then
@@ -279,6 +314,7 @@ runs:
           GH_PAGES_API="https://api.github.com/repos/${{ inputs.external_repository }}/pages"
         fi
         curl -s -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ inputs.token }} " $GH_PAGES_API > gh-pages.json
+        REPORT_URL=${REPORT_URL}
         #-------------------------------------------------------------------
         if [[ ${REPORT_URL} != '' ]]; then
             REPORT_URL="${REPORT_URL}"
@@ -288,7 +324,9 @@ runs:
             REPORT_URL="${REPORT_URL%/}"
             echo $REPORT_URL
             echo REPORT_URL=$REPORT_URL >> $GITHUB_ENV
-             echo "#### GitHub Pages HTML Reports" >> $GITHUB_STEP_SUMMARY
+            if [[ "${{ inputs.use_actions_summary }}" != 'false' || "${{ inputs.use_actions_summary }}" != false ]]; then
+              echo "#### GitHub Pages HTML Reports" >> $GITHUB_STEP_SUMMARY
+            fi;
             echo "REPORT_URL=${REPORT_URL}" >> $GITHUB_OUTPUT        
         fi;
         #-------------------------------------------------------------------
@@ -316,20 +354,35 @@ runs:
         fi;
         #-------------------------------------------------------------------        
         create_executor_json_func () {
-          #echo "executor.json"
-          echo '{"name":"GitHub Actions","type":"github","reportName":"TR Test Reporting",' > executor.json
-          echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
-          echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${GITHUB_RUN_NUM}/\"," >> executor.json
-          echo "\"buildUrl\":\"https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"," >> executor.json
-          echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_ID}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json        
-          echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_NUM}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json
-          echo "URL=${GITHUB_PAGES_WEBSITE_URL}" >> environment.properties
-          cat executor.json
-          cat environment.properties
+          if [ ! -f ${{ inputs.test_results }}/executor.json ]; then
+            #echo "executor.json"
+            echo '{"name":"GitHub Actions","type":"github","reportName":"Test Reporting",' > executor.json
+            echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
+            echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${GITHUB_RUN_NUM}/\"," >> executor.json
+            echo "\"buildUrl\":\"https://github.com/${{ github.repository }}/actions/runs/${GITHUB_RUN_ID}\"," >> executor.json
+            echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_ID}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json        
+            echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_NUM}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json
+
+            mv ./executor.json ${{ inputs.test_results }}  
+          fi
+          if [ ! -f ${{ inputs.test_results }}/environment.properties ]; then
+            {
+             echo URL=${GITHUB_PAGES_WEBSITE_URL}
+             echo BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+             echo GIT_BRANCH=${{ github.head_ref || github.ref_name }}
+             echo GIT_COMMIT_ID=${{ github.sha }}
+             echo GIT_COMMIT_MESSAGE=$(git show -s --format=%s HEAD)
+             echo GIT_COMMIT_AUTHOR_NAME=$(git show -s --format='%ae' HEAD)
+             echo GIT_COMMIT_TIME=$(git show -s --format=%ci HEAD)
+            } >> environment.properties
+
+            mv ./environment.properties ${{ inputs.test_results }}
+          fi 
         }
         #-------------------------------------------------------------------
         copy_current_results_func () {
           mkdir -p ./${GH_PAGES}/${GITHUB_RUN_NUM}
+          # If we are not dealing with Allure Reports then copy the test results
           if [[ ${{ env.ALLURE_FLAG }} == false || ${{ env.ALLURE_FLAG }} == 'false' || ${{ env.ALLURE_FLAG }} == '' ]]; then
             cp -r ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}/. ./${GH_PAGES}/${GITHUB_RUN_NUM}  
           fi;
@@ -352,8 +405,10 @@ runs:
         #-------------------------------------------------------------------
         echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_OUTPUT
         # Publish Job Summary
-        echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
-        echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_STEP_SUMMARY
+        if [[ "${{ inputs.use_actions_summary }}" != 'false' || "${{ inputs.use_actions_summary }}" != false ]]; then
+          echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_STEP_SUMMARY
+        fi;
         #-------------------------------------------------------------------
         # First Run Delete Function
         cd ./${GH_PAGES}
@@ -431,10 +486,8 @@ runs:
           npm -g install allure-commandline
           npx allure --version
           # cd ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}
-          # create_executor_json_func
-          #cd ..
-          #cd ${GIHUB_WORKSPACE}
-          npx allure generate ${{ inputs.test_results }} -o allure-report
+          create_executor_json_func 
+          npx allure generate ${{ inputs.test_results }} -o allure-report --clean
           # finally copy allure report
           cp -r allure-report/. ${GH_PAGES}/${GITHUB_RUN_NUM}
           # Create Last History Folder if its not present
@@ -457,6 +510,7 @@ runs:
       uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         github_token: ${{ inputs.token }}
+        force_orphan: false
         publish_branch: ${{ inputs.gh_pages }}
         keep_files: false
         publish_dir: ${{ inputs.gh_pages }}
@@ -468,6 +522,7 @@ runs:
       with:
         personal_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
+        force_orphan: false
         external_repository: ${{ inputs.external_repository }}
         keep_files: false
         publish_dir: ${{ inputs.gh_pages }}
@@ -479,6 +534,7 @@ runs:
       with:
         github_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
+        force_orphan: false
         publish_dir: ${{ inputs.gh_pages }}/${{ inputs.subfolder }}
         keep_files: false
         destination_dir: ${{ inputs.subfolder }}
@@ -490,6 +546,7 @@ runs:
       with:
         personal_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
+        force_orphan: false
         publish_dir: ${{ inputs.gh_pages }}/${{ inputs.subfolder }}
         external_repository: ${{ inputs.external_repository }}
         keep_files: false
@@ -497,69 +554,227 @@ runs:
         allow_empty_commit: true
 
     - name: generate github pages site - same repo
-      if: ${{ inputs.external_repository == '' }}
+      if: ${{ ( inputs.external_repository == '' ) && ( inputs.subfolder == '' ) }}
       shell: bash
-      env:
-        GH_TOKEN: ${{ github.token }}
+      env: 
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         #----------------------------------------------------------
         # FINALLY DO THE GH PAGES SITE CREATION
         #----------------------------------------------------------
+        set -e
+        echo "calling gh api to list pages"
         gh api \
           -H "Accept: application/vnd.github+json" \
-          repos/${GITHUB_REPOSITORY}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-        GH_SITE_MESSAGE=$(cat ${GITHUB_WORKSPACE}/gh-pages.json | jq '.message' | xargs)
-        if [ "${GH_SITE_PRESENT}" == 'Not Found' ]; then
-            curl \
-              -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}"\
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              https://api.github.com/repos/${GITHUB_REPOSITORY}/pages \
-              -d `{"source":{"branch":"${{ inputs.gh_pages }}","path":"/${{ inputs.SUBFOLDER }}"}}`
-            gh api \
-              -H "Accept: application/vnd.github+json" \
-              repos/${GITHUB_REPOSITORY}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
-            REPORT_URL="${REPORT_URL%/}"
-            echo "Your GitHub Pages URL: $REPORT_URL"
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          repos/${{ github.repository }}/pages --silent > gh-pages.txt || true;
+        echo "calling gh api to list pages"
+        GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
+        if echo "${GH_SITE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \   
+            repos/${{ github.repository }}/pages --silent > gh-pages.json || true;
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
         else
-            echo "site already present"
-            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
-            REPORT_URL="${REPORT_URL%/}"
-            echo "Your GitHub Pages URL: $REPORT_URL"
+          echo "site already present"
+          echo "updating gh page info"
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;             
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \   
+            repos/${{ github.repository }}/pages --silent > gh-pages.json || true;
+
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
         fi;
 
     - name: generate github pages site - different repo
       shell: bash
-      if: ${{ inputs.external_repository != '' }}
-      env:
-        GH_TOKEN: ${{ github.token }}
+      if: ${{ ( inputs.external_repository != '' ) && ( inputs.subfolder == '' ) }}
+      env: 
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         #-----------------------------------------------------------------------------------------------------------------------------------------------------
         # FINALLY DO THE GH PAGES SITE CREATION
         #-----------------------------------------------------------------------------------------------------------------------------------------------------
+        set -e
         gh api \
           -H "Accept: application/vnd.github+json" \
-          /repos/${{ inputs.external_repository }}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-        GH_SITE_MESSAGE=$(cat ${GITHUB_WORKSPACE}/gh-pages.json | jq '.message' | xargs)
-        if [ "${GH_SITE_PRESENT}" == 'Not Found' ]; then
-            curl \
-              -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${GITHUB_TOKEN}"\
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              https://api.github.com/repos/${{ inputs.external_repository }}/pages \
-              -d `{"source":{"branch":"${{ inputs.gh_pages }}","path":"/${{ inputs.SUBFOLDER }}"}}`
-            gh api \
-              -H "Accept: application/vnd.github+json" \
-              /repos/${{ inputs.external_repository }}/pages > ${GITHUB_WORKSPACE}/gh-pages.json
-            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
-            REPORT_URL="${REPORT_URL%/}"
-            echo "Your GitHub Pages URL: $REPORT_URL"
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.txt || true;
+        GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
+        if echo "${GH_SITE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ inputs.external_repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;             
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \    
+            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ; 
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
         else
-            echo "site already present"
-            REPORT_URL=$(jq -r '.html_url' ${GITHUB_WORKSPACE}/gh-pages.json | tr -d '"' | xargs)
-            REPORT_URL="${REPORT_URL%/}"
-            echo "Your GitHub Pages URL: $REPORT_URL"
+          echo "site already present"
+          echo "updating gh page info"
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ inputs.external_repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;             
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \    
+            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"      
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
+        fi;
+
+    - name: generate github pages site - same repo
+      if: ${{ ( inputs.external_repository == '' ) && ( inputs.subfolder != '' ) }}
+      shell: bash
+      env: 
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        #----------------------------------------------------------
+        # FINALLY DO THE GH PAGES SITE CREATION
+        #----------------------------------------------------------
+        set -e
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          repos/${{ github.repository }}/pages --silent > gh-pages.txt || true;
+        GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
+        if echo "${GH_SITE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;             
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            repos/${{ github.repository }}/pages --silent > gh-pages.json || true;
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
+        else
+          echo "site already present"
+          echo "updating gh page info";
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;             
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            repos/${{ github.repository }}/pages --silent > gh-pages.json || true ;
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
+        fi;
+
+    - name: generate github pages site - different repo
+      shell: bash
+      if: ${{ ( inputs.external_repository != '' ) && ( inputs.subfolder != '' ) }}
+      env: 
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        #-----------------------------------------------------------------------------------------------------------------------------------------------------
+        # FINALLY DO THE GH PAGES SITE CREATION
+        #-----------------------------------------------------------------------------------------------------------------------------------------------------
+        set -e
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.txt || true;
+        GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
+        if echo "${GH_SITE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ inputs.external_repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.txt || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;             
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \    
+            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
+        else
+          echo "site already present"
+          echo "updating gh page info"
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ inputs.external_repository }}/pages \
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.txt || true;
+          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
+          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+            echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
+          fi;             
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \    
+            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
+          REPORT_URL=$(jq -r '.html_url' gh-pages.json | xargs)
+          REPORT_URL="${REPORT_URL%/}"
+          echo "Your GitHub Pages URL: $REPORT_URL"
         fi;

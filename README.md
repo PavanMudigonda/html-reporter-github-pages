@@ -1,17 +1,24 @@
-# PavanMudigonda/html-reporter-github-pages@v1.4
+# PavanMudigonda/html-reporter-github-pages@v1.5
 
-a) This is a New and Improved GitHub Pages HTML Reporter
+## Enhanced GitHub Pages HTML Reporter
 
-b) To migrate to new action, please follow below documentation
-
-c) For support please create a Issue in this repo
+**Major improvements in v1.5:**
+- ✅ **Enhanced Branch Management**: Better orphan branch creation with proper stashing
+- ✅ **Robust External Repository Support**: Improved handling of external repositories with fallback mechanisms  
+- ✅ **Better GitHub CLI Integration**: Uses `sersoft-gmbh/setup-gh-cli-action@v2.0.1` for reliable CLI setup
+- ✅ **Improved Error Handling**: Enhanced API calls with `--silent` flag and better error messages
+- ✅ **Advanced Configuration**: New `use_actions_summary` input for controlling job summary outputs
+- ✅ **Enhanced Environment Files**: More comprehensive environment.properties with Git metadata
+- ✅ **Java 17 Support**: Updated from Java 11 to Java 17 for better Allure report generation
+- ✅ **Force Orphan Protection**: Added `force_orphan: false` to prevent accidental history loss
+- ✅ **Better Script Management**: Scripts now bundled with action instead of downloading at runtime
 
 **If you like my Github Action, please STAR ⭐ it**
 
 ## Example workflow - same repo
 
-      - name: ANY REPROT - GH Pages Push - SAME REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.4
+      - name: ANY REPORT - GH Pages Push - SAME REPO
+        uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
           keep_reports: 20
@@ -20,6 +27,7 @@ c) For support please create a Issue in this repo
           tool_name: cucumber # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
+          use_actions_summary: true # Control job summary output
           token: ${{ secrets.GH_PAT }} # Please note we need GitHub Person Access Token to perform gh pages deploy
 
 
@@ -27,7 +35,7 @@ c) For support please create a Issue in this repo
 
 
       - name: ANY REPORT - GH Pages Push - ANOTHER REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.4
+        uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
           keep_reports: 20
@@ -37,6 +45,7 @@ c) For support please create a Issue in this repo
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
           external_repository: PavanMudigonda/another-awesome-repo
+          use_actions_summary: true # Control job summary output
           token: ${{ secrets.GH_PAT }} # Please note we need GitHub Person Access Token to perform gh pages deploy and to commit to another repo
           
 
@@ -93,11 +102,3 @@ This Action defines the following formal outputs.
 |-|-|-|-|
 | **`GITHUB_PAGES_WEBSITE_URL`**  | ${{ env.GITHUB_PAGES_WEBSITE_URL }} | GitHub Pages Home URL|you can use this to pass to subsequent patterns
 | **`PLEASE SEE NEXT COLUMN`**  | '${{ env.GITHUB_PAGES_WEBSITE_URL }}/${github.run_number}/index.html' | GitHub Pages Latest Run result URL|you can use this to pass to subsequent patterns
-
-
-
-
-
-
-
-
