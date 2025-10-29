@@ -337,10 +337,18 @@ runs:
         fi;
         if [[ "${TOOL_NAME}" != "" ]]; then
             GH_PAGES="${GH_PAGES}/${TOOL_NAME}"
-            GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${TOOL_NAME}"
+            if [[ "${SUBFOLDER}" != "" ]]; then
+                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${SUBFOLDER}/${TOOL_NAME}"
+            else
+                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${TOOL_NAME}"
+            fi
             mkdir -p ${GH_PAGES}
         else
-            GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}"
+            if [[ "${SUBFOLDER}" != "" ]]; then
+                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${SUBFOLDER}"
+            else
+                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}"
+            fi
         fi;
         if [[ "${WORKFLOW_NAME}" != "" ]]; then
             GH_PAGES="${GH_PAGES}/${WORKFLOW_NAME}"
@@ -745,7 +753,7 @@ runs:
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ inputs.external_repository }}/pages \
-             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.txt || true;
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json || true;
           GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
           if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
             echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
@@ -765,7 +773,7 @@ runs:
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ inputs.external_repository }}/pages \
-             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.txt || true;
+             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json || true;
           GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
           if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
             echo "Permissions are missing for GITHUB_TOKEN to create GitHub Pages site automatically ! Please create manually by going to Settings -> Pages and select branch and folder to deploy from"
