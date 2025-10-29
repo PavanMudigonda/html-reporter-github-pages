@@ -52,7 +52,7 @@
 ## ALLURE REPORT EXAMPLE - Same Repo
 
       - name: ALLURE REPORT - GH Pages Push - SAME REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.4
+        uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: allure-results
           allure_report_generate_flag: true
