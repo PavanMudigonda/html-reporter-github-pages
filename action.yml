@@ -258,10 +258,11 @@ runs:
         export TOOL_NAME="${{ inputs.tool_name }}"
         export WORKFLOW_NAME="${{ inputs.workflow_name }}"
         export ORDER="${{ inputs.order }}"
+        export USE_ACTIONS_SUMMARY="${{ inputs.use_actions_summary }}"
         export GITHUB_WORKSPACE="${{ env.GITHUB_WORKSPACE }}"
         export WORKFLOW_NAME=$(echo "${{ inputs.workflow_name }}" | tr " " "-")
         #--------------------------------------------------------
-        cd "${{ inputs.gh_pages }}"
+        cd "${GH_PAGES}"
         if [[ "${SUBFOLDER}" != "" ]]; then
           mkdir -p "${SUBFOLDER}"
         fi;
@@ -304,14 +305,14 @@ runs:
           fi;
         }
         #-------------------------------------------------------------------
-        EXTERNAL_REPO_OWNER_SLASH_NAME=${{ inputs.external_repository }}
+        EXTERNAL_REPO_OWNER_SLASH_NAME=${EXTERNAL_REPO}
         EXTERNAL_REPO_NAME=${EXTERNAL_REPO_OWNER_SLASH_NAME##*/}
         if [[ "${EXTERNAL_REPO_NAME}" == '' ]]; 
         then
           GH_PAGES_API="repos/${{ github.repository }}/pages"
-        elif [[ "${{ inputs.external_repository }}" != '' ]]
+        elif [[ "${EXTERNAL_REPO}" != '' ]]
         then
-          GH_PAGES_API="repos/${{ inputs.external_repository }}/pages"
+          GH_PAGES_API="repos/${EXTERNAL_REPO}/pages"
         fi
         gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" ${GH_PAGES_API} > gh-pages.json || true
         REPORT_URL=${REPORT_URL}
@@ -324,12 +325,14 @@ runs:
             REPORT_URL="${REPORT_URL%/}"
             echo $REPORT_URL
             echo REPORT_URL=$REPORT_URL >> $GITHUB_ENV
-            if [[ "${{ inputs.use_actions_summary }}" != 'false' || "${{ inputs.use_actions_summary }}" != false ]]; then
+            if [[ "${USE_ACTIONS_SUMMARY}" != 'false' && "${USE_ACTIONS_SUMMARY}" != false ]]; then
               echo "#### GitHub Pages HTML Reports" >> $GITHUB_STEP_SUMMARY
             fi;
             echo "REPORT_URL=${REPORT_URL}" >> $GITHUB_OUTPUT        
         fi;
         #-------------------------------------------------------------------
+        # Save original GH_PAGES value before it gets modified
+        GH_PAGES_BASE="${GH_PAGES}"
         # Identify where the current report should be copied to
         if [[ "${SUBFOLDER}" != "" ]]; then
           GH_PAGES="${GH_PAGES}/${SUBFOLDER}"
@@ -362,7 +365,7 @@ runs:
         fi;
         #-------------------------------------------------------------------        
         create_executor_json_func () {
-          if [ ! -f ${{ inputs.test_results }}/executor.json ]; then
+          if [ ! -f ${TEST_RESULTS}/executor.json ]; then
             #echo "executor.json"
             echo '{"name":"GitHub Actions","type":"github","reportName":"Test Reporting",' > executor.json
             echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
@@ -371,9 +374,9 @@ runs:
             echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_ID}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json        
             echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_NUM}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json
 
-            mv ./executor.json ${{ inputs.test_results }}  
+            mv ./executor.json ${TEST_RESULTS}  
           fi
-          if [ ! -f ${{ inputs.test_results }}/environment.properties ]; then
+          if [ ! -f ${TEST_RESULTS}/environment.properties ]; then
             {
              echo URL=${GITHUB_PAGES_WEBSITE_URL}
              echo BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -384,7 +387,7 @@ runs:
              echo GIT_COMMIT_TIME=$(git show -s --format=%ci HEAD)
             } >> environment.properties
 
-            mv ./environment.properties ${{ inputs.test_results }}
+            mv ./environment.properties ${TEST_RESULTS}
           fi 
         }
         #-------------------------------------------------------------------
@@ -413,7 +416,7 @@ runs:
         #-------------------------------------------------------------------
         echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_OUTPUT
         # Publish Job Summary
-        if [[ "${{ inputs.use_actions_summary }}" != 'false' || "${{ inputs.use_actions_summary }}" != false ]]; then
+        if [[ "${USE_ACTIONS_SUMMARY}" != 'false' && "${USE_ACTIONS_SUMMARY}" != false ]]; then
           echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
           echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_STEP_SUMMARY
         fi;
@@ -432,43 +435,43 @@ runs:
         cd "$GH_PAGES_ACTION_HOME"
         #-------------------------------------------------------------------   
         if [[ ${SUBFOLDER} == "" ]]; then
-          cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}"
+          cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}"
           generate_index_html_func
           cd "$GH_PAGES_ACTION_HOME"
         fi;
         if [[ ${SUBFOLDER} != "" ]]; then
-            cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}"
+            cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}"
             generate_index_html_func
             cd "$GH_PAGES_ACTION_HOME"
             if [[ ${TOOL_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}"
+                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}/${TOOL_NAME}"
                 generate_index_html_func
                 cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}"
+                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}"
                 generate_index_html_func
                 cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
+                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
                 generate_index_html_func
                 cd "$GH_PAGES_ACTION_HOME"
             fi;          
         fi;
         if [[ ${SUBFOLDER} == "" ]]; then
             if [[ ${TOOL_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}"
+                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${TOOL_NAME}"
                 generate_index_html_func
                 cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}"
+                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${TOOL_NAME}/${WORKFLOW_NAME}"
                 generate_index_html_func
                 cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
+                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
                 generate_index_html_func
                 cd "$GH_PAGES_ACTION_HOME"
             fi;
@@ -495,7 +498,7 @@ runs:
           npx allure --version
           # cd "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"
           create_executor_json_func 
-          npx allure generate ${{ inputs.test_results }} -o allure-report --clean
+          npx allure generate ${TEST_RESULTS} -o allure-report --clean
           # finally copy allure report
           cp -r allure-report/. "${GH_PAGES}/${GITHUB_RUN_NUM}"
           # Create Last History Folder if its not present
