@@ -325,7 +325,7 @@ runs:
             REPORT_URL="${REPORT_URL%/}"
             echo $REPORT_URL
             echo REPORT_URL=$REPORT_URL >> $GITHUB_ENV
-            if [[ "${USE_ACTIONS_SUMMARY}" != 'false' && "${USE_ACTIONS_SUMMARY}" != false ]]; then
+            if [[ "${USE_ACTIONS_SUMMARY}" != 'false' || "${USE_ACTIONS_SUMMARY}" != false ]]; then
               echo "#### GitHub Pages HTML Reports" >> $GITHUB_STEP_SUMMARY
             fi;
             echo "REPORT_URL=${REPORT_URL}" >> $GITHUB_OUTPUT        
@@ -416,7 +416,7 @@ runs:
         #-------------------------------------------------------------------
         echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_OUTPUT
         # Publish Job Summary
-        if [[ "${USE_ACTIONS_SUMMARY}" != 'false' && "${USE_ACTIONS_SUMMARY}" != false ]]; then
+        if [[ "${USE_ACTIONS_SUMMARY}" != 'false' || "${USE_ACTIONS_SUMMARY}" != false ]]; then
           echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
           echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_STEP_SUMMARY
         fi;
