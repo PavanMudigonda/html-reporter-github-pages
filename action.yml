@@ -640,8 +640,8 @@ runs:
           gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \    
-            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ; 
-          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
+            repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ; 
+          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
           REPORT_URL="${REPORT_URL%/}"
           echo "Your GitHub Pages URL: $REPORT_URL"
         else
@@ -660,11 +660,8 @@ runs:
           gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \    
-            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
-          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
-          REPORT_URL="${REPORT_URL%/}"
-          echo "Your GitHub Pages URL: $REPORT_URL"      
-          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
+            repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
+          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
           REPORT_URL="${REPORT_URL%/}"
           echo "Your GitHub Pages URL: $REPORT_URL"
         fi;
@@ -753,8 +750,8 @@ runs:
           gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \    
-            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
-          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
+            repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
+          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
           REPORT_URL="${REPORT_URL%/}"
           echo "Your GitHub Pages URL: $REPORT_URL"
         else
@@ -773,8 +770,8 @@ runs:
           gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \    
-            /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
-          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
+            repos/${{ inputs.external_repository }}/pages --silent > gh-pages.json || true ;
+          REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs)
           REPORT_URL="${REPORT_URL%/}"
           echo "Your GitHub Pages URL: $REPORT_URL"
         fi;
