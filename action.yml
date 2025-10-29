@@ -259,7 +259,7 @@ runs:
         export WORKFLOW_NAME="${{ inputs.workflow_name }}"
         export ORDER="${{ inputs.order }}"
         export GITHUB_WORKSPACE="${{ env.GITHUB_WORKSPACE }}"
-        export WORKFLOW_NAME=$(echo ${{ inputs.workflow_name }} | tr " " -)
+        export WORKFLOW_NAME=$(echo "${{ inputs.workflow_name }}" | tr " " "-")
         #--------------------------------------------------------
         cd ${{ inputs.gh_pages }}
         if [[ "${SUBFOLDER}" != "" ]]; then
@@ -333,24 +333,24 @@ runs:
         # Identify where the current report should be copied to
         if [[ "${SUBFOLDER}" != "" ]]; then
           GH_PAGES="${GH_PAGES}/${SUBFOLDER}"
-          mkdir -p ${GH_PAGES}
+          mkdir -p "${GH_PAGES}"
         fi;
         if [[ "${TOOL_NAME}" != "" ]]; then
             GH_PAGES="${GH_PAGES}/${TOOL_NAME}"
             GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${TOOL_NAME}"
-            mkdir -p ${GH_PAGES}
+            mkdir -p "${GH_PAGES}"
         else
             GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}"
         fi;
         if [[ "${WORKFLOW_NAME}" != "" ]]; then
             GH_PAGES="${GH_PAGES}/${WORKFLOW_NAME}"
             GITHUB_PAGES_WEBSITE_URL="${GITHUB_PAGES_WEBSITE_URL}/${WORKFLOW_NAME}"
-            mkdir -p ${GH_PAGES}
+            mkdir -p "${GH_PAGES}"
         fi;
         if [[ "${ENV}" != "" ]]; then
             GH_PAGES="${GH_PAGES}/${ENV}"
             GITHUB_PAGES_WEBSITE_URL="${GITHUB_PAGES_WEBSITE_URL}/${ENV}"
-            mkdir -p ${GH_PAGES}
+            mkdir -p "${GH_PAGES}"
         fi;
         #-------------------------------------------------------------------        
         create_executor_json_func () {
@@ -381,21 +381,21 @@ runs:
         }
         #-------------------------------------------------------------------
         copy_current_results_func () {
-          mkdir -p ./${GH_PAGES}/${GITHUB_RUN_NUM}
+          mkdir -p "./${GH_PAGES}/${GITHUB_RUN_NUM}"
           # If we are not dealing with Allure Reports then copy the test results
           if [[ ${{ env.ALLURE_FLAG }} == false || ${{ env.ALLURE_FLAG }} == 'false' || ${{ env.ALLURE_FLAG }} == '' ]]; then
-            cp -r ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}/. ./${GH_PAGES}/${GITHUB_RUN_NUM}  
+            cp -r "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"/. "./${GH_PAGES}/${GITHUB_RUN_NUM}"
           fi;
         }
         #-------------------------------------------------------------------
         generate_index_html_func () {
-          python3 ${INDEX_SCRIPT_PATH}
+          python3 "${INDEX_SCRIPT_PATH}"
           echo "Completed index html generation"
         }
         #-------------------------------------------------------------------
         echo "current path: $PWD"
-        mkdir -p ./${GH_PAGES}
-        mkdir -p ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}
+        mkdir -p "./${GH_PAGES}"
+        mkdir -p "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"
         echo "NEW results history folder ${GH_PAGES}"
         echo "New GH_PAGES folder: ${GH_PAGES}"
         echo "NEW github pages url ${GITHUB_PAGES_WEBSITE_URL}"       
@@ -411,96 +411,96 @@ runs:
         fi;
         #-------------------------------------------------------------------
         # First Run Delete Function
-        cd ./${GH_PAGES}
+        cd "./${GH_PAGES}"
         delete_folders_func
-        cd $GH_PAGES_ACTION_HOME
+        cd "$GH_PAGES_ACTION_HOME"
         #-------------------------------------------------------------------
         # Copy current test-results for staging
         copy_current_results_func
         #-------------------------------------------------------------------   
         # Generate Final FOLDER STRUCTURE at lowest level
-        cd ./${GH_PAGES}
+        cd "./${GH_PAGES}"
         generate_index_html_func
-        cd $GH_PAGES_ACTION_HOME
+        cd "$GH_PAGES_ACTION_HOME"
         #-------------------------------------------------------------------   
         if [[ ${SUBFOLDER} == "" ]]; then
-          cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}
+          cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}"
           generate_index_html_func
-          cd $GH_PAGES_ACTION_HOME
+          cd "$GH_PAGES_ACTION_HOME"
         fi;
         if [[ ${SUBFOLDER} != "" ]]; then
-            cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}
+            cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}"
             generate_index_html_func
-            cd $GH_PAGES_ACTION_HOME
+            cd "$GH_PAGES_ACTION_HOME"
             if [[ ${TOOL_NAME} != "" ]]; then
-                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}//${SUBFOLDER}/${TOOL_NAME}
+                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}"
                 generate_index_html_func
-                cd $GH_PAGES_ACTION_HOME
+                cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
-                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}
+                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}"
                 generate_index_html_func
-                cd $GH_PAGES_ACTION_HOME
+                cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
-                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}
+                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
                 generate_index_html_func
-                cd $GH_PAGES_ACTION_HOME
+                cd "$GH_PAGES_ACTION_HOME"
             fi;          
         fi;
         if [[ ${SUBFOLDER} == "" ]]; then
             if [[ ${TOOL_NAME} != "" ]]; then
-                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}
+                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}"
                 generate_index_html_func
-                cd $GH_PAGES_ACTION_HOME
+                cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
-                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}
+                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}"
                 generate_index_html_func
-                cd $GH_PAGES_ACTION_HOME
+                cd "$GH_PAGES_ACTION_HOME"
             fi;
             if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
-                cd ${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}
+                cd "${GH_PAGES_ACTION_HOME}/${{ inputs.gh_pages }}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
                 generate_index_html_func
-                cd $GH_PAGES_ACTION_HOME
+                cd "$GH_PAGES_ACTION_HOME"
             fi;
         fi;
         #-------------------------------------------------------------------
-        cd $GH_PAGES_ACTION_HOME
+        cd "$GH_PAGES_ACTION_HOME"
         # Manage History and Last History Folders
         # Create History folder just in case if its not present.
         # For Allure Reports it would be present by default
         # For other reports it will not be present
-        mkdir -p ./${GH_PAGES}/${GITHUB_RUN_NUM}/history
+        mkdir -p "./${GH_PAGES}/${GITHUB_RUN_NUM}/history"
         #-------------------------------------------------------------------
-        cd $GH_PAGES_ACTION_HOME
-        cd ./${GH_PAGES}
+        cd "$GH_PAGES_ACTION_HOME"
+        cd "./${GH_PAGES}"
         if [ -d last-history ]; then
            #Copy Last History from previous run in to Allure Results Folder for Allure Report Generation
-           cp -r ./last-history/. ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}/history
+           cp -r ./last-history/. "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}/history"
         fi;
         #--------------------------------------------------------------------
         # Allure Report Generation
         if [[ ${{ env.ALLURE_FLAG }} == true || ${{ env.ALLURE_FLAG }} == 'true' ]]; then
-          cd $GH_PAGES_ACTION_HOME
+          cd "$GH_PAGES_ACTION_HOME"
           npm -g install allure-commandline
           npx allure --version
-          # cd ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}
+          # cd "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"
           create_executor_json_func 
           npx allure generate ${{ inputs.test_results }} -o allure-report --clean
           # finally copy allure report
-          cp -r allure-report/. ${GH_PAGES}/${GITHUB_RUN_NUM}
+          cp -r allure-report/. "${GH_PAGES}/${GITHUB_RUN_NUM}"
           # Create Last History Folder if its not present
-          mkdir -p ./${GH_PAGES}/last-history
+          mkdir -p "./${GH_PAGES}/last-history"
           # Create History folder in Test Results just in case so next command copy won't fail
-          mkdir -p ${GH_PAGES}/${GITHUB_RUN_NUM}/history
+          mkdir -p "${GH_PAGES}/${GITHUB_RUN_NUM}/history"
           # Move files from Last History folder to History folder inside the most latest run that is currently being run right now
           # This is to show up history and retires information under Allure Reports
-          if [ -d ./${GH_PAGES}/last-history ]; then
-            cp -r ./allure-report/history/. ./${GH_PAGES}/last-history
+          if [ -d "./${GH_PAGES}/last-history" ]; then
+            cp -r ./allure-report/history/. "./${GH_PAGES}/last-history"
           else
-            mkdir ./${GH_PAGES}/last-history
-            cp -r ./allure-report/history/. ./${GH_PAGES}/last-history
+            mkdir "./${GH_PAGES}/last-history"
+            cp -r ./allure-report/history/. "./${GH_PAGES}/last-history"
           fi;
         fi;
         #--------------------------------------------------------------------
