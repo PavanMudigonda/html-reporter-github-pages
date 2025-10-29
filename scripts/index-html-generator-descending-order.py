@@ -1,16 +1,4 @@
 #!/usr/bin/env python3
-# ---
-# ---
-#
-# Generate index.html files for
-# all subdirectories in a directory tree.
-
-# handle symlinked files and folders: displayed with custom icons
-
-# By default only the current folder is processed and hidden files (starting with a dot) are skipped.
-# To force inclusion of hidden files pass --include-hidden.
-
-# Use -r or --recursive to process nested folders.
 
 import argparse
 import datetime
@@ -42,8 +30,8 @@ def process_dir(top_dir, opts):
 <html>
 <head>
     <meta charset="utf-8">
-    <title>TEST REPORT</title>
-    <link rel="favicon" type="image/x-icon" href="favicon.ico"> 
+    <title>Test Report</title>
+    <link rel="favicon" type="image/x-icon" href="favicon.ico">    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
     * { padding: 0; margin: 0; }
@@ -331,7 +319,7 @@ def process_dir(top_dir, opts):
                  """)
 
     # sort dirs first
-    sorted_entries = sorted(path_top_dir.glob(glob_patt), key=lambda p: (p.is_file(), p.name))
+    sorted_entries = sorted(path_top_dir.glob(glob_patt), key=lambda p: (p.is_file(), p.name), reverse=True)
 
     entry: Path
     for entry in sorted_entries:
