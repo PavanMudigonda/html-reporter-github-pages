@@ -211,8 +211,8 @@ runs:
         GIT_USER_NAME: "GitHub Actions"        
       run: |
         echo "Creating new gh-pages branch for external repo"
-        mkdir -p ${{ inputs.gh_pages }}
-        cd ${{ inputs.gh_pages }}
+        mkdir -p "${{ inputs.gh_pages }}"
+        cd "${{ inputs.gh_pages }}"
         git config --local user.email $GIT_USER_EMAIL
         git config --local user.name $GIT_USER_NAME
         git switch --orphan ${{ inputs.gh_pages }}
@@ -261,11 +261,11 @@ runs:
         export GITHUB_WORKSPACE="${{ env.GITHUB_WORKSPACE }}"
         export WORKFLOW_NAME=$(echo "${{ inputs.workflow_name }}" | tr " " "-")
         #--------------------------------------------------------
-        cd ${{ inputs.gh_pages }}
+        cd "${{ inputs.gh_pages }}"
         if [[ "${SUBFOLDER}" != "" ]]; then
           mkdir -p "${SUBFOLDER}"
         fi;
-        cd ${GH_PAGES_ACTION_HOME}
+        cd "${GH_PAGES_ACTION_HOME}"
         # Set variables
         if [[ ${{ env.ALLURE_FLAG }} == true || ${{ env.ALLURE_FLAG }} == 'true' ]]; then
           ALLURE_REPORT="allure-report"
