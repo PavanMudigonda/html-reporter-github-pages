@@ -204,7 +204,7 @@ runs:
         
     - name: Get test results history
       if: ${{ inputs.external_repository == '' }}
-      uses: actions/checkout@v4.1.6
+      uses: actions/checkout@v5.0.0
       continue-on-error: true
       with:
         ref: ${{ inputs.gh_pages }}
