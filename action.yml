@@ -239,7 +239,7 @@ runs:
         RUNNER_OS: "${{ runner.os }}"
         GITHUB_RUN_NUM: "${{ inputs.github_run_num }}"
         TOOL_NAME: "${{ inputs.tool_name }}"
-        ORDER: "${{ inputs.oder }}"
+        ORDER: "${{ inputs.order }}"
         GH_TOKEN: "${{ github.token }}"
       run: |
         export GH_PAGES_ACTION_HOME=$PWD
