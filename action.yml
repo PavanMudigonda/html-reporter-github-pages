@@ -209,6 +209,7 @@ runs:
       with:
         ref: ${{ inputs.gh_pages }}
         path: ${{ inputs.gh_pages }}
+        persist-credentials: false
 
     - id: external-repo
       shell: bash
@@ -246,6 +247,7 @@ runs:
         repository: ${{ inputs.external_repository }}
         ref: ${{ inputs.ref }}
         token: ${{ inputs.token }}
+        persist-credentials: false
 
     - if: ${{ ( steps.external-repo.outputs.ref-exists == 'false' ) && ( inputs.external_repository != '' ) }}
       uses: actions/checkout@v5.0.0
@@ -254,6 +256,7 @@ runs:
         repository: ${{ inputs.external_repository }}
         ref: ${{ steps.external-repo.outputs.default-branch }}
         token: ${{ inputs.token }}
+        persist-credentials: false
 
     - name: Create a new gh pages branch if it doesn't exist - external repo
       shell: bash
