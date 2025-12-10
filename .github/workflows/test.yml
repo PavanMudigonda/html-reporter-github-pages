@@ -15,15 +15,17 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6.1.0
         with:
-          node-version: '18'
+          node-version: lts/*
           
-      - name: GH Pages Push
+      - name: GH Pages Push - SAME REPO
         uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
           keep_reports: 20
-          gh_pages: gh-pages # BRANCH NAME you like
+          gh_pages: gh_pages # BRANCH NAME you like
           subfolder: docs  # Level 1 Folder Structure you like
           tool_name: cucumber # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
+          use_actions_summary: true # Control job summary output
+          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Personal Access Token to perform gh pages deploy
