@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6.0.1
 
       - name: Checkout tools repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6.0.1
         with:
           repository: PavanMudigonda/devops
           path: devops
@@ -20,9 +20,9 @@ jobs:
           token: ${{ secrets.GH_PAT }}
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v6.1.0
         with:
-          node-version: '18'
+          node-version: lts/*
           
       - name: List Files in workspace
         if: always()
@@ -30,7 +30,7 @@ jobs:
           ls -R;
 
       - name: Get Test Results history
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6.0.1
         if: always()
         continue-on-error: true
         with:
@@ -38,29 +38,12 @@ jobs:
           path: gh-pages
 
       - name: Create Playwright Test Results History
-        uses: PavanMudigonda/playwright-github-pages@v0.1
+        uses: PavanMudigonda/html-reporter-github-pages@v1.5
         id: test-report
         with:
           playwright_results: test-results
           gh_pages: gh-pages
           playwright_history: playwright-history
           keep_reports: 20
-
-      - name: Deploy report to Github Pages
-        if: always()
-        uses: peaceiris/actions-gh-pages@v3
-        env:
-          external_repository: PavanMudigonda/devops
-          PUBLISH_BRANCH: gh-pages
-          personal_token: ${{ secrets.GH_PAT }}
-          PUBLISH_DIR: playwright-history
-
-      - name: Post the link to the report
-        if: always()
-        uses: Sibz/github-status-action@v1
-        with: 
-            authToken: ${{secrets.GITHUB_TOKEN}}
-            context: 'Test Results Link'
-            state: 'success'
-            sha: ${{ github.sha }}
-            target_url: https://PavanMudigonda.github.io/playwright-github-pages/${{ github.run_number }}
+          token: ${{ secrets.GH_PAT }}
+          
