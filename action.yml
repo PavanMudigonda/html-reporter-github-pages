@@ -82,6 +82,56 @@ outputs:
 runs:
   using: 'composite'    
   steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        set -e
+        echo "::group::Validating action inputs"
+        
+        # Validate keep_reports is a positive integer
+        if ! [[ "${{ inputs.keep_reports }}" =~ ^[0-9]+$ ]]; then
+          echo "::error::keep_reports must be a positive integer, got: ${{ inputs.keep_reports }}"
+          exit 1
+        fi
+        
+        # Validate order parameter
+        if [[ "${{ inputs.order }}" != "ascending" && "${{ inputs.order }}" != "descending" ]]; then
+          echo "::error::order must be 'ascending' or 'descending', got: ${{ inputs.order }}"
+          exit 1
+        fi
+        
+        # Validate test_results directory exists
+        if [ ! -d "${{ inputs.test_results }}" ]; then
+          echo "::error::test_results directory not found: ${{ inputs.test_results }}"
+          exit 1
+        fi
+        
+        # Validate subfolder doesn't contain dangerous paths
+        if [[ "${{ inputs.subfolder }}" == *..* ]]; then
+          echo "::error::subfolder cannot contain '..' (parent directory references)"
+          exit 1
+        fi
+        
+        if [[ "${{ inputs.subfolder }}" == /* ]]; then
+          echo "::error::subfolder cannot be an absolute path (cannot start with '/')"
+          exit 1
+        fi
+        
+        # Validate allure_report_generate_flag is a boolean
+        if [[ "${{ inputs.allure_report_generate_flag }}" != "true" && "${{ inputs.allure_report_generate_flag }}" != "false" ]]; then
+          echo "::error::allure_report_generate_flag must be 'true' or 'false', got: ${{ inputs.allure_report_generate_flag }}"
+          exit 1
+        fi
+        
+        # Validate use_actions_summary is a boolean
+        if [[ "${{ inputs.use_actions_summary }}" != "true" && "${{ inputs.use_actions_summary }}" != "false" ]]; then
+          echo "::error::use_actions_summary must be 'true' or 'false', got: ${{ inputs.use_actions_summary }}"
+          exit 1
+        fi
+        
+        echo "✅ All input validations passed"
+        echo "::endgroup::"
+    
     - name: checkout action
       uses: actions/checkout@v5.0.0
       
@@ -272,11 +322,8 @@ runs:
           ALLURE_REPORT="allure-report"
         fi;
         #-------------------------------------------------------------------
-        if [[ ${ORDER} != 'ascending' ]]; then
-          INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator.py
-        elif [[ ${ORDER} == 'descending' ]]; then
-          INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator-descending-order.py
-        fi;
+        # Use single index generator script with order parameter
+        INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator.py
         #-------------------------------------------------------------------
         # Check if its external repo push
         if [[ ${EXTERNAL_REPO} != '' ]]; then
@@ -399,7 +446,7 @@ runs:
         }
         #-------------------------------------------------------------------
         generate_index_html_func () {
-          python3 "${INDEX_SCRIPT_PATH}"
+          python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
           echo "Completed index html generation"
         }
         #-------------------------------------------------------------------
@@ -515,49 +562,26 @@ runs:
         fi;
         #--------------------------------------------------------------------
 
-    - name: Deploy report to Github Pages
-      if: ${{ inputs.external_repository == '' && inputs.subfolder == '' }}
+    - name: Deploy report to Github Pages (Same Repository)
+      if: ${{ inputs.external_repository == '' }}
       uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         github_token: ${{ inputs.token }}
         force_orphan: false
         publish_branch: ${{ inputs.gh_pages }}
         keep_files: false
-        publish_dir: ${{ inputs.gh_pages }}
-        allow_empty_commit: true
-
-    - name: Deploy report to Github Pages
-      if: ${{ inputs.external_repository != '' && inputs.subfolder == '' }}
-      uses: peaceiris/actions-gh-pages@v4.0.0
-      with:
-        personal_token: ${{ inputs.token }}
-        publish_branch: ${{ inputs.gh_pages }}
-        force_orphan: false
-        external_repository: ${{ inputs.external_repository }}
-        keep_files: false
-        publish_dir: ${{ inputs.gh_pages }}
-        allow_empty_commit: true
-
-    - name: Deploy report to Github Pages
-      if: ${{ inputs.external_repository == '' && inputs.subfolder != '' }}
-      uses: peaceiris/actions-gh-pages@v4.0.0
-      with:
-        github_token: ${{ inputs.token }}
-        publish_branch: ${{ inputs.gh_pages }}
-        force_orphan: false
-        publish_dir: ${{ inputs.gh_pages }}/${{ inputs.subfolder }}
-        keep_files: false
+        publish_dir: ${{ inputs.subfolder != '' && format('{0}/{1}', inputs.gh_pages, inputs.subfolder) || inputs.gh_pages }}
         destination_dir: ${{ inputs.subfolder }}
         allow_empty_commit: true
 
-    - name: Deploy report to Github Pages
-      if: ${{ inputs.external_repository != '' && inputs.subfolder != '' }}
+    - name: Deploy report to Github Pages (External Repository)
+      if: ${{ inputs.external_repository != '' }}
       uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         personal_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
         force_orphan: false
-        publish_dir: ${{ inputs.gh_pages }}/${{ inputs.subfolder }}
+        publish_dir: ${{ inputs.subfolder != '' && format('{0}/{1}', inputs.gh_pages, inputs.subfolder) || inputs.gh_pages }}
         external_repository: ${{ inputs.external_repository }}
         keep_files: false
         destination_dir: ${{ inputs.subfolder }}

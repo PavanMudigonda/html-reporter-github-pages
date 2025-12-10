@@ -319,7 +319,8 @@ def process_dir(top_dir, opts):
                  """)
 
     # sort dirs first
-    sorted_entries = sorted(path_top_dir.glob(glob_patt), key=lambda p: (p.is_file(), p.name))
+    reverse_order = getattr(opts, 'reverse', False)
+    sorted_entries = sorted(path_top_dir.glob(glob_patt), key=lambda p: (p.is_file(), p.name), reverse=reverse_order)
 
     entry: Path
     for entry in sorted_entries:
@@ -486,5 +487,12 @@ if __name__ == "__main__":
                              ' verbosely list every processed file',
                         required=False)
 
+    parser.add_argument('--order',
+                        choices=['ascending', 'descending'],
+                        default='ascending',
+                        help='Sort order for directory entries (ascending by default, use descending for reverse chronological order)')
+
     config = parser.parse_args(sys.argv[1:])
+    # Set reverse flag based on order
+    config.reverse = (config.order == 'descending')
     process_dir(config.top_dir, config)
