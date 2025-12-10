@@ -322,12 +322,8 @@ runs:
           ALLURE_REPORT="allure-report"
         fi;
         #-------------------------------------------------------------------
-        if [[ ${ORDER} == 'ascending' ]]; then
-          INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator.py
-        else
-          # Default to descending order
-          INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator-descending-order.py
-        fi;
+        # Use single index generator script with order parameter
+        INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator.py
         #-------------------------------------------------------------------
         # Check if its external repo push
         if [[ ${EXTERNAL_REPO} != '' ]]; then
@@ -450,7 +446,7 @@ runs:
         }
         #-------------------------------------------------------------------
         generate_index_html_func () {
-          python3 "${INDEX_SCRIPT_PATH}"
+          python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
           echo "Completed index html generation"
         }
         #-------------------------------------------------------------------
