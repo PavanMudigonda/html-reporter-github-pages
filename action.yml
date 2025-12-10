@@ -239,7 +239,7 @@ runs:
         RUNNER_OS: "${{ runner.os }}"
         GITHUB_RUN_NUM: "${{ inputs.github_run_num }}"
         TOOL_NAME: "${{ inputs.tool_name }}"
-        ORDER: "${{ inputs.oder }}"
+        ORDER: "${{ inputs.order }}"
         GH_TOKEN: "${{ github.token }}"
       run: |
         export GH_PAGES_ACTION_HOME=$PWD
@@ -371,7 +371,6 @@ runs:
             echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
             echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${GITHUB_RUN_NUM}/\"," >> executor.json
             echo "\"buildUrl\":\"https://github.com/${{ github.repository }}/actions/runs/${GITHUB_RUN_ID}\"," >> executor.json
-            echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_ID}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json        
             echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_NUM}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json
 
             mv ./executor.json ${TEST_RESULTS}  
