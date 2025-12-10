@@ -28,4 +28,3 @@ jobs:
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
           use_actions_summary: true # Control job summary output
-          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Personal Access Token to perform gh pages deploy
