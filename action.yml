@@ -134,6 +134,8 @@ runs:
     
     - name: checkout action
       uses: actions/checkout@v5.0.0
+      with:
+        persist-credentials: false
       
     - name: Install GH CLI
       uses: sersoft-gmbh/setup-gh-cli-action@v2.0.1
