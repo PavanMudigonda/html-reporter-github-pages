@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      HAS_GH_PAT: ${{ secrets.GH_PAT != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.1
@@ -21,7 +23,7 @@ jobs:
       - name: GH Pages Push - Another REPO
         # Only run if GH_PAT secret is available (required for external repository push)
         # To enable this test, add a GH_PAT secret with 'repo' scope in Settings -> Secrets
-        if: secrets.GH_PAT != ''
+        if: env.HAS_GH_PAT == 'true'
         uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
