@@ -132,7 +132,7 @@ runs:
         # Warn about external_repository usage
         if [[ -n "${{ inputs.external_repository }}" ]]; then
           echo "::warning::Using external_repository requires a Personal Access Token (PAT) with 'repo' scope."
-          echo "::warning::Make sure you provide: token: \${{ secrets.GH_PAT }}"
+          echo "::warning::Make sure you provide: token: \$"{{ secrets.GH_PAT }}" in your workflow file"
           echo "::warning::The default GITHUB_TOKEN cannot push to external repositories."
         fi
         
@@ -706,7 +706,7 @@ runs:
           elif echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
             echo "::warning::API call to create GitHub Pages site failed (403 - Insufficient permissions)."
             echo "::warning::For external repositories, you must use a Personal Access Token (PAT) with 'repo' and 'pages: write' scopes."
-            echo "::warning::Please provide: token: \${{ secrets.GH_PAT }}"
+            echo "::warning::Please provide: token: \$"{{ secrets.GH_PAT }}" in your workflow file"
           fi;             
           gh api \
             -H "Accept: application/vnd.github+json" \
@@ -859,7 +859,7 @@ runs:
           elif echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
             echo "::warning::API call to create GitHub Pages site failed (403 - Insufficient permissions)."
             echo "::warning::For external repositories, you must use a Personal Access Token (PAT) with 'repo' and 'pages: write' scopes."
-            echo "::warning::Please provide: token: \${{ secrets.GH_PAT }}"
+            echo "::warning::Please provide: token: \$"{{ secrets.GH_PAT }}" in your workflow file"
           fi;             
           gh api \
             -H "Accept: application/vnd.github+json" \
