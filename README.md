@@ -39,8 +39,8 @@ jobs:
 ```
 
 **Note about `pages: write` permission:**
-- **Without it**: The action will successfully deploy your reports to GitHub Pages, but you may see a warning about "Resource not accessible by integration (HTTP 403)" when the action tries to automatically configure GitHub Pages settings. This is **not a critical error** - you can simply configure GitHub Pages manually in Settings → Pages.
-- **With it**: The action can automatically configure GitHub Pages settings (branch and folder) via the API, providing a fully automated experience.
+- **Without it**: The action will successfully deploy your reports to GitHub Pages. The action intelligently detects the deployment method and will only attempt to configure GitHub Pages settings when appropriate. You may need to manually enable GitHub Pages in Settings → Pages on the first deployment.
+- **With it**: The action can automatically configure GitHub Pages settings (branch and folder) via the API for legacy branch-based deployments, providing a fully automated experience. Note: When using GitHub Actions deployment method (recommended), source branch configuration is not applicable.
 
 ### Option 2: Use a Personal Access Token (PAT)
 

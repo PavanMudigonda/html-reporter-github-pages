@@ -657,7 +657,7 @@ runs:
           echo "GitHub Pages already configured"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(cat gh-pages.txt | grep -o '"build_type":"[^"]*"' | cut -d'"' -f4 || echo "")
+          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
@@ -739,7 +739,7 @@ runs:
           echo "GitHub Pages already configured for external repository"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(cat gh-pages.txt | grep -o '"build_type":"[^"]*"' | cut -d'"' -f4 || echo "")
+          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
@@ -824,7 +824,7 @@ runs:
           echo "GitHub Pages already configured"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(cat gh-pages.txt | grep -o '"build_type":"[^"]*"' | cut -d'"' -f4 || echo "")
+          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
@@ -906,7 +906,7 @@ runs:
           echo "GitHub Pages already configured for external repository"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(cat gh-pages.txt | grep -o '"build_type":"[^"]*"' | cut -d'"' -f4 || echo "")
+          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
