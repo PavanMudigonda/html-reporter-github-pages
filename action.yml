@@ -669,7 +669,14 @@ runs:
           echo "GitHub Pages already configured"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
+          # Try jq first (more reliable), fall back to awk
+          if command -v jq &> /dev/null; then
+            BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
+          else
+            BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt 2>/dev/null || echo "")
+          fi
+          
+          echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
@@ -678,24 +685,30 @@ runs:
             echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
           else
             # Legacy branch-based deployment - try to update
-            echo "Updating GitHub Pages source branch configuration..."
-            gh api \
-              --method PUT \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
-            
-            GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
-            if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-              echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
-            elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-              echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::To fix this, add 'pages: write' permission to your workflow."
-              echo "::notice::Your deployment was successful, but source branch settings were not updated"
+            # Only warn about permissions if build_type is explicitly "legacy"
+            # If build_type is unknown/empty, still attempt update for backwards compatibility
+            if [ -n "$BUILD_TYPE" ] && [ "$BUILD_TYPE" != "legacy" ]; then
+              echo "::notice::Unknown deployment method '${BUILD_TYPE}', skipping source branch update"
             else
-              echo "::notice::GitHub Pages source branch updated successfully"
-            fi;
+              echo "Updating GitHub Pages source branch configuration..."
+              gh api \
+                --method PUT \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                /repos/${{ github.repository }}/pages \
+                 -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
+              
+              GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
+              if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+                echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
+              elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
+                echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
+                echo "::warning::To fix this, add 'pages: write' permission to your workflow."
+                echo "::notice::Your deployment was successful, but source branch settings were not updated"
+              else
+                echo "::notice::GitHub Pages source branch updated successfully"
+              fi;
+            fi
           fi
         fi;
         
@@ -751,7 +764,14 @@ runs:
           echo "GitHub Pages already configured for external repository"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
+          # Try jq first (more reliable), fall back to awk
+          if command -v jq &> /dev/null; then
+            BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
+          else
+            BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt 2>/dev/null || echo "")
+          fi
+          
+          echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
@@ -760,24 +780,30 @@ runs:
             echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
           else
             # Legacy branch-based deployment - try to update
-            echo "Updating GitHub Pages source branch configuration..."
-            gh api \
-              --method PUT \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ inputs.external_repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
-            
-            GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
-            if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-              echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
-            elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-              echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::For external repositories, ensure your PAT has 'repo' and 'pages: write' scopes."
-              echo "::notice::Your deployment was successful, but source branch settings were not updated"
+            # Only warn about permissions if build_type is explicitly "legacy"
+            # If build_type is unknown/empty, still attempt update for backwards compatibility
+            if [ -n "$BUILD_TYPE" ] && [ "$BUILD_TYPE" != "legacy" ]; then
+              echo "::notice::Unknown deployment method '${BUILD_TYPE}', skipping source branch update"
             else
-              echo "::notice::GitHub Pages source branch updated successfully"
-            fi;
+              echo "Updating GitHub Pages source branch configuration..."
+              gh api \
+                --method PUT \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                /repos/${{ inputs.external_repository }}/pages \
+                 -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
+              
+              GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
+              if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+                echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
+              elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
+                echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
+                echo "::warning::For external repositories, ensure your PAT has 'repo' and 'pages: write' scopes."
+                echo "::notice::Your deployment was successful, but source branch settings were not updated"
+              else
+                echo "::notice::GitHub Pages source branch updated successfully"
+              fi;
+            fi
           fi
         fi;
         
@@ -836,7 +862,14 @@ runs:
           echo "GitHub Pages already configured"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
+          # Try jq first (more reliable), fall back to awk
+          if command -v jq &> /dev/null; then
+            BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
+          else
+            BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt 2>/dev/null || echo "")
+          fi
+          
+          echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
@@ -845,24 +878,30 @@ runs:
             echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
           else
             # Legacy branch-based deployment - try to update
-            echo "Updating GitHub Pages source branch configuration..."
-            gh api \
-              --method PUT \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
-            
-            GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
-            if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-              echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
-            elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-              echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::To fix this, add 'pages: write' permission to your workflow."
-              echo "::notice::Your deployment was successful, but source branch settings were not updated"
+            # Only warn about permissions if build_type is explicitly "legacy"
+            # If build_type is unknown/empty, still attempt update for backwards compatibility
+            if [ -n "$BUILD_TYPE" ] && [ "$BUILD_TYPE" != "legacy" ]; then
+              echo "::notice::Unknown deployment method '${BUILD_TYPE}', skipping source branch update"
             else
-              echo "::notice::GitHub Pages source branch updated successfully"
-            fi;
+              echo "Updating GitHub Pages source branch configuration..."
+              gh api \
+                --method PUT \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                /repos/${{ github.repository }}/pages \
+                 -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
+              
+              GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
+              if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+                echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
+              elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
+                echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
+                echo "::warning::To fix this, add 'pages: write' permission to your workflow."
+                echo "::notice::Your deployment was successful, but source branch settings were not updated"
+              else
+                echo "::notice::GitHub Pages source branch updated successfully"
+              fi;
+            fi
           fi
         fi;
         
@@ -918,7 +957,14 @@ runs:
           echo "GitHub Pages already configured for external repository"
           
           # Check the build_type to determine if we should update
-          BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt || echo "")
+          # Try jq first (more reliable), fall back to awk
+          if command -v jq &> /dev/null; then
+            BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
+          else
+            BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt 2>/dev/null || echo "")
+          fi
+          
+          echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
             # GitHub Actions deployment - don't try to update source branch
@@ -927,24 +973,30 @@ runs:
             echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
           else
             # Legacy branch-based deployment - try to update
-            echo "Updating GitHub Pages source branch configuration..."
-            gh api \
-              --method PUT \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ inputs.external_repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
-            
-            GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
-            if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-              echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
-            elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-              echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::For external repositories, ensure your PAT has 'repo' and 'pages: write' scopes."
-              echo "::notice::Your deployment was successful, but source branch settings were not updated"
+            # Only warn about permissions if build_type is explicitly "legacy"
+            # If build_type is unknown/empty, still attempt update for backwards compatibility
+            if [ -n "$BUILD_TYPE" ] && [ "$BUILD_TYPE" != "legacy" ]; then
+              echo "::notice::Unknown deployment method '${BUILD_TYPE}', skipping source branch update"
             else
-              echo "::notice::GitHub Pages source branch updated successfully"
-            fi;
+              echo "Updating GitHub Pages source branch configuration..."
+              gh api \
+                --method PUT \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                /repos/${{ inputs.external_repository }}/pages \
+                 -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
+              
+              GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
+              if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
+                echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
+              elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
+                echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
+                echo "::warning::For external repositories, ensure your PAT has 'repo' and 'pages: write' scopes."
+                echo "::notice::Your deployment was successful, but source branch settings were not updated"
+              else
+                echo "::notice::GitHub Pages source branch updated successfully"
+              fi;
+            fi
           fi
         fi;
         
