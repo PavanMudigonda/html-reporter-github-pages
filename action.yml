@@ -165,11 +165,11 @@ runs:
         else
           git config --local user.email "$GIT_USER_EMAIL"
           git config --local user.name "$GIT_USER_NAME"
-          git switch --orphan ${{ inputs.gh_pages }}
+          git switch --orphan "${{ inputs.gh_pages }}"
           git add .
           git commit --allow-empty -m "Initial commit on orphan branch"
           git config --global pull.rebase true
-          git push -u origin ${{ inputs.gh_pages }}
+          git push -u origin "${{ inputs.gh_pages }}"
         fi;
 
         # Switch back to the original branch
@@ -264,11 +264,11 @@ runs:
         cd "${{ inputs.gh_pages }}"
         git config --local user.email $GIT_USER_EMAIL
         git config --local user.name $GIT_USER_NAME
-        git switch --orphan ${{ inputs.gh_pages }}
+        git switch --orphan "${{ inputs.gh_pages }}"
         git add .
         git commit --allow-empty -m "Initial commit on orphan branch"
         git config --global pull.rebase true
-        git push -u origin ${{ inputs.gh_pages }}
+        git push -u origin "${{ inputs.gh_pages }}"
 
     - name: Create Test Results History GitHub Actions Run ID wise
       id: gh_page
