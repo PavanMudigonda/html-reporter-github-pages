@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required for pushing to gh-pages branch
+      pages: write     # Optional: enables automatic GitHub Pages configuration via API
     steps:
       - uses: actions/checkout@v4
       - uses: PavanMudigonda/html-reporter-github-pages@v1.5
@@ -36,6 +37,10 @@ jobs:
           test_results: test-results
           # No need to specify token - uses GITHUB_TOKEN automatically
 ```
+
+**Note about `pages: write` permission:**
+- **Without it**: The action will successfully deploy your reports to GitHub Pages, but you may see a warning about "Resource not accessible by integration (HTTP 403)" when the action tries to automatically configure GitHub Pages settings. This is **not a critical error** - you can simply configure GitHub Pages manually in Settings → Pages.
+- **With it**: The action can automatically configure GitHub Pages settings (branch and folder) via the API, providing a fully automated experience.
 
 ### Option 2: Use a Personal Access Token (PAT)
 
@@ -45,11 +50,11 @@ If you need to push to a different repository or require additional permissions:
 - uses: PavanMudigonda/html-reporter-github-pages@v1.5
   with:
     test_results: test-results
-    token: ${{ secrets.GH_PAT }}  # PAT with repo permissions
+    token: ${{ secrets.GH_PAT }}  # PAT with repo and pages:write permissions
     external_repository: username/another-repo  # optional
 ```
 
-To create a PAT: Settings → Developer settings → Personal access tokens → Generate new token (with `repo` scope)
+To create a PAT: Settings → Developer settings → Personal access tokens → Generate new token (with `repo` scope, and optionally `pages: write` for automatic configuration)
 
 ## Example workflow - same repo
 
@@ -67,6 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required to push to gh-pages branch
+      pages: write     # Optional: enables automatic GitHub Pages configuration
     
     steps:
       - uses: actions/checkout@v4
@@ -136,6 +142,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Required to push to gh-pages branch
+      pages: write     # Optional: enables automatic GitHub Pages configuration
     
     steps:
       - uses: actions/checkout@v4
