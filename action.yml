@@ -311,6 +311,7 @@ runs:
         export GITHUB_WORKSPACE="${{ env.GITHUB_WORKSPACE }}"
         export WORKFLOW_NAME=$(echo "${{ inputs.workflow_name }}" | tr " " "-")
         #--------------------------------------------------------
+        mkdir -p "${GH_PAGES}"
         cd "${GH_PAGES}"
         if [[ "${SUBFOLDER}" != "" ]]; then
           mkdir -p "${SUBFOLDER}"
