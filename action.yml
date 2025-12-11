@@ -228,7 +228,11 @@ runs:
           then
             USING="main"
           else
-            USING="$(gh api /repos/${{ inputs.external_repository }}/commits/${{ github.sha }}/branches-where-head --jq '.[0].name')"
+            USING="$(gh api /repos/${{ inputs.external_repository }}/commits/${{ github.sha }}/branches-where-head --jq '.[0].name' 2>/dev/null || echo "main")"
+            # Handle null or empty response
+            if [[ "$USING" == "null" || -z "$USING" ]]; then
+              USING="main"
+            fi
           fi
           echo "::notice::Checkout: ${{ inputs.external_repository }} using ${USING}"
           echo "ref-exists=true" >> $GITHUB_ENV
@@ -238,7 +242,11 @@ runs:
             echo "::notice::Checkout: ${{ inputs.external_repository }} using ${{ inputs.gh_pages }}"
             echo "ref-exists=true" >> $GITHUB_ENV
           else
-            USING="$(gh api /repos/${{ inputs.external_repository }} --jq '.default_branch')"
+            USING="$(gh api /repos/${{ inputs.external_repository }} --jq '.default_branch' 2>/dev/null || echo "main")"
+            # Handle null or empty response
+            if [[ "$USING" == "null" || -z "$USING" ]]; then
+              USING="main"
+            fi
             echo "::notice::Checkout: ${{ inputs.external_repository }} does not have ref ${{ inputs.gh_pages }} (fallback to ${USING})"
             echo "ref-exists=false" >> $GITHUB_ENV
             echo "default-branch=${USING}" >> $GITHUB_ENV
@@ -382,7 +390,11 @@ runs:
             REPORT_URL="${REPORT_URL}"
             echo "Replacing github pages url. NEW url ${REPORT_URL}"
         else
-            REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" ${GH_PAGES_API} --jq '.html_url' | tr -d '"' | xargs)
+            REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" ${GH_PAGES_API} --jq '.html_url' 2>/dev/null | tr -d '"' | xargs || echo "")
+            # Handle null or empty response
+            if [[ "$REPORT_URL" == "null" || -z "$REPORT_URL" ]]; then
+              REPORT_URL=""
+            fi
             REPORT_URL="${REPORT_URL%/}"
             echo $REPORT_URL
             echo REPORT_URL=$REPORT_URL >> $GITHUB_ENV
