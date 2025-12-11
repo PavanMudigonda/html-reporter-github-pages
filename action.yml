@@ -455,7 +455,12 @@ runs:
           mkdir -p "./${GH_PAGES}/${GITHUB_RUN_NUM}"
           # If we are not dealing with Allure Reports then copy the test results
           if [[ ${{ env.ALLURE_FLAG }} == false || ${{ env.ALLURE_FLAG }} == 'false' || ${{ env.ALLURE_FLAG }} == '' ]]; then
-            cp -r "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"/. "./${GH_PAGES}/${GITHUB_RUN_NUM}"
+            # Check if source directory exists and has content before copying
+            if [ -d "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}" ] && [ "$(ls -A "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}" 2>/dev/null)" ]; then
+              cp -r "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"/. "./${GH_PAGES}/${GITHUB_RUN_NUM}"
+            else
+              echo "::warning::Test results directory is empty or does not exist: ${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"
+            fi
           fi;
         }
         #-------------------------------------------------------------------
@@ -546,7 +551,7 @@ runs:
         #-------------------------------------------------------------------
         cd "$GH_PAGES_ACTION_HOME"
         cd "./${GH_PAGES}"
-        if [ -d last-history ]; then
+        if [ -d last-history ] && [ "$(ls -A ./last-history 2>/dev/null)" ]; then
            #Copy Last History from previous run in to Allure Results Folder for Allure Report Generation
            cp -r ./last-history/. "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}/history"
         fi;
@@ -560,7 +565,12 @@ runs:
           create_executor_json_func 
           npx allure generate ${TEST_RESULTS} -o allure-report --clean
           # finally copy allure report
-          cp -r allure-report/. "${GH_PAGES}/${GITHUB_RUN_NUM}"
+          if [ -d allure-report ] && [ "$(ls -A allure-report 2>/dev/null)" ]; then
+            cp -r allure-report/. "${GH_PAGES}/${GITHUB_RUN_NUM}"
+          else
+            echo "::error::Allure report generation failed - allure-report directory is empty or does not exist"
+            exit 1
+          fi
           # Create Last History Folder if its not present
           mkdir -p "./${GH_PAGES}/last-history"
           # Create History folder in Test Results just in case so next command copy won't fail
@@ -568,10 +578,14 @@ runs:
           # Move files from Last History folder to History folder inside the most latest run that is currently being run right now
           # This is to show up history and retires information under Allure Reports
           if [ -d "./${GH_PAGES}/last-history" ]; then
-            cp -r ./allure-report/history/. "./${GH_PAGES}/last-history"
+            if [ -d ./allure-report/history ] && [ "$(ls -A ./allure-report/history 2>/dev/null)" ]; then
+              cp -r ./allure-report/history/. "./${GH_PAGES}/last-history"
+            fi
           else
             mkdir "./${GH_PAGES}/last-history"
-            cp -r ./allure-report/history/. "./${GH_PAGES}/last-history"
+            if [ -d ./allure-report/history ] && [ "$(ls -A ./allure-report/history 2>/dev/null)" ]; then
+              cp -r ./allure-report/history/. "./${GH_PAGES}/last-history"
+            fi
           fi;
         fi;
         #--------------------------------------------------------------------
