@@ -136,6 +136,7 @@ runs:
       uses: sersoft-gmbh/setup-gh-cli-action@v2.0.1
       with:
         version: stable
+        github-token: ${{ inputs.token }}
 
     - name: Java Install for Allure
       if: ${{ inputs.allure_report_generate_flag == 'true' && env.JAVA_PRESENT == 'false'}}
