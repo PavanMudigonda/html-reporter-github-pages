@@ -151,6 +151,7 @@ runs:
       env:
         GIT_USER_EMAIL: actions@github.com
         GIT_USER_NAME: GitHub Actions
+        GITHUB_TOKEN: ${{ inputs.token }}
       run: |
         set -e
         CURRENT_BRANCH=$(git branch --show-current)
@@ -170,6 +171,8 @@ runs:
           git add .
           git commit --allow-empty -m "Initial commit on orphan branch"
           git config --global pull.rebase true
+          # Configure git to use token for authentication
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           git push -u origin "${{ inputs.gh_pages }}"
         fi;
 
@@ -258,7 +261,8 @@ runs:
       if: ${{ ( inputs.external_repository != '' ) && ( steps.external-repo.outputs.ref-exists == 'false' ) }}
       env:
         GIT_USER_EMAIL: "actions@github.com"
-        GIT_USER_NAME: "GitHub Actions"        
+        GIT_USER_NAME: "GitHub Actions"
+        GITHUB_TOKEN: ${{ inputs.token }}
       run: |
         echo "Creating new gh-pages branch for external repo"
         mkdir -p "${{ inputs.gh_pages }}"
@@ -269,6 +273,8 @@ runs:
         git add .
         git commit --allow-empty -m "Initial commit on orphan branch"
         git config --global pull.rebase true
+        # Configure git to use token for authentication
+        git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ inputs.external_repository }}.git"
         git push -u origin "${{ inputs.gh_pages }}"
 
     - name: Create Test Results History GitHub Actions Run ID wise
