@@ -1,4 +1,0 @@
-{
-  "build_type": "workflow",
-  "html_url": "https://example.github.io/repo"
-}
