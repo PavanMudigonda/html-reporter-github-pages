@@ -129,6 +129,13 @@ runs:
           exit 1
         fi
         
+        # Warn about external_repository usage
+        if [[ -n "${{ inputs.external_repository }}" ]]; then
+          echo "::warning::Using external_repository requires a Personal Access Token (PAT) with 'repo' scope."
+          echo "::warning::Make sure you provide: token: \${{ secrets.GH_PAT }}"
+          echo "::warning::The default GITHUB_TOKEN cannot push to external repositories."
+        fi
+        
         echo "✅ All input validations passed"
         echo "::endgroup::"
     

@@ -7,6 +7,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.1
@@ -28,4 +30,6 @@ jobs:
           env: QA # Level 4 Folder Structure you like
           use_actions_summary: true # Control job summary output
           external_repository: PavanMudigonda/devops
-          
+          # NOTE: External repository push requires a PAT token
+          # Uncomment the line below and add GH_PAT secret to enable this test:
+          # token: ${{ secrets.GH_PAT }}

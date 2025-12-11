@@ -15,9 +15,66 @@
 
 **If you like my Github Action, please STAR ⭐ it**
 
+## ⚠️ Important: Permissions Required
+
+This action requires **write permissions** to push content to GitHub Pages. You have two options:
+
+### Option 1: Grant permissions to GITHUB_TOKEN (Recommended)
+
+Add `permissions: contents: write` to your workflow:
+
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for pushing to gh-pages branch
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PavanMudigonda/html-reporter-github-pages@v1.5
+        with:
+          test_results: test-results
+          # No need to specify token - uses GITHUB_TOKEN automatically
+```
+
+### Option 2: Use a Personal Access Token (PAT)
+
+If you need to push to a different repository or require additional permissions:
+
+```yaml
+- uses: PavanMudigonda/html-reporter-github-pages@v1.5
+  with:
+    test_results: test-results
+    token: ${{ secrets.GH_PAT }}  # PAT with repo permissions
+    external_repository: username/another-repo  # optional
+```
+
+To create a PAT: Settings → Developer settings → Personal access tokens → Generate new token (with `repo` scope)
+
 ## Example workflow - same repo
 
-      - name: ANY REPORT - GH Pages Push - SAME REPO
+**Complete workflow example:**
+
+```yaml
+name: Deploy Test Report
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to push to gh-pages branch
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run tests
+        run: npm test  # or your test command
+      
+      - name: Deploy Report to GitHub Pages
         uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
@@ -28,13 +85,29 @@
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
           use_actions_summary: true # Control job summary output
-          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Personal Access Token to perform gh pages deploy
+          # token defaults to GITHUB_TOKEN - no need to specify if permissions.contents: write is set
+```
 
 
 ## Example workflow - different repo
 
+**For deploying to a different repository, you MUST use a Personal Access Token:**
 
-      - name: ANY REPORT - GH Pages Push - ANOTHER REPO
+```yaml
+name: Deploy to External Repo
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy Report to External GitHub Pages
         uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
@@ -46,12 +119,31 @@
           env: QA # Level 4 Folder Structure you like
           external_repository: PavanMudigonda/another-awesome-repo
           use_actions_summary: true # Control job summary output
-          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Personal Access Token to perform gh pages deploy and to commit to another repo
-          
+          token: ${{ secrets.GH_PAT }} # REQUIRED: PAT with repo permissions for external repository
+```
 
 ## ALLURE REPORT EXAMPLE - Same Repo
 
-      - name: ALLURE REPORT - GH Pages Push - SAME REPO
+```yaml
+name: Allure Report
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  allure-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to push to gh-pages branch
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run tests and generate Allure results
+        run: npm test  # Should generate allure-results folder
+      
+      - name: Deploy Allure Report to GitHub Pages
         uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: allure-results
@@ -61,7 +153,8 @@
           subfolder: docs  # Level 1 Folder Structure you like
           tool_name: allure # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
-          token: ${{ secrets.GH_PAT }} # Please note we need GitHub Personal Access Token to perform gh pages deploy
+          # token defaults to GITHUB_TOKEN - no need to specify if permissions.contents: write is set
+```
 
 ## Demo https://pavanmudigonda.github.io/html-reporter-github-pages/
 
@@ -92,7 +185,7 @@ This Action defines the following formal inputs.
 |**`env`** | false | None | This is for level 4 Folder Structure. you can overwrite with some other value. we don't care.
 |**`order`** | true | descending | Order of Folders, ascending or descending.
 |**`allure_report_generate_flag`** | false | false | If you are working with Allure and if you would like to have this action generate Allure Report out of the RAW Results, then select True. Make sure you provide Allure RAW Results Path for input **test_results**
-| **`token`** | true | GITHUB_TOKEN | Please note we need GitHub Personal Access Token to perform gh pages deploy and to commit to another repo. The default GITHUB_TOKEN doesn't have deployment and commit to another repo permissions.
+| **`token`** | false | GITHUB_TOKEN | GitHub token for authentication. For same-repo deployments, the default GITHUB_TOKEN works if you grant `permissions: contents: write` in your workflow. For external repository deployments, you MUST provide a Personal Access Token (PAT) with `repo` scope.
 
 ## Outputs
 
