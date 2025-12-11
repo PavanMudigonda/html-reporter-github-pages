@@ -296,7 +296,7 @@ runs:
         GITHUB_RUN_NUM: "${{ inputs.github_run_num }}"
         TOOL_NAME: "${{ inputs.tool_name }}"
         ORDER: "${{ inputs.order }}"
-        GH_TOKEN: "${{ github.token }}"
+        GH_TOKEN: "${{ inputs.token }}"
       run: |
         export GH_PAGES_ACTION_HOME=$PWD
         export ENV="${{ inputs.env }}"
