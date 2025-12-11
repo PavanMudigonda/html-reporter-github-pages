@@ -19,6 +19,9 @@ jobs:
           node-version: lts/*
 
       - name: GH Pages Push - Another REPO
+        # Only run if GH_PAT secret is available (required for external repository push)
+        # To enable this test, add a GH_PAT secret with 'repo' scope in Settings -> Secrets
+        if: secrets.GH_PAT != ''
         uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
@@ -30,6 +33,4 @@ jobs:
           env: QA # Level 4 Folder Structure you like
           use_actions_summary: true # Control job summary output
           external_repository: PavanMudigonda/devops
-          # NOTE: External repository push requires a PAT token
-          # Uncomment the line below and add GH_PAT secret to enable this test:
-          # token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_PAT }} # Required for external repository push
