@@ -18,7 +18,21 @@ jobs:
         with:
           node-version: lts/*
 
+      - name: Check if GH_PAT secret is available
+        id: check_secret
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.GH_PAT }}" ]; then
+            echo "has_pat=true" >> $GITHUB_OUTPUT
+            echo "::notice::GH_PAT secret is available - external repository test will run"
+          else
+            echo "has_pat=false" >> $GITHUB_OUTPUT
+            echo "::warning::GH_PAT secret is not available - external repository test will be skipped"
+            echo "::warning::To enable this test, add a GH_PAT secret with 'repo' scope in repository Settings -> Secrets"
+          fi
+
       - name: GH Pages Push - Another REPO
+        if: steps.check_secret.outputs.has_pat == 'true'
         uses: PavanMudigonda/html-reporter-github-pages@v1.5
         with:
           test_results: test-results
@@ -30,6 +44,4 @@ jobs:
           env: QA # Level 4 Folder Structure you like
           use_actions_summary: true # Control job summary output
           external_repository: PavanMudigonda/devops
-          # NOTE: External repository push requires a PAT token
-          # Uncomment the line below and add GH_PAT secret to enable this test:
-          # token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_PAT }} # Required for external repository push
