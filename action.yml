@@ -262,8 +262,8 @@ runs:
         echo "Creating new gh-pages branch for external repo"
         mkdir -p "${{ inputs.gh_pages }}"
         cd "${{ inputs.gh_pages }}"
-        git config --local user.email $GIT_USER_EMAIL
-        git config --local user.name $GIT_USER_NAME
+        git config --local user.email "$GIT_USER_EMAIL"
+        git config --local user.name "$GIT_USER_NAME"
         git switch --orphan "${{ inputs.gh_pages }}"
         git add .
         git commit --allow-empty -m "Initial commit on orphan branch"
