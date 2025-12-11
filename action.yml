@@ -392,7 +392,7 @@ runs:
             else
                 GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${TOOL_NAME}"
             fi
-            mkdir -p ${GH_PAGES}
+            mkdir -p "${GH_PAGES}"
         else
             if [[ "${SUBFOLDER}" != "" ]]; then
                 GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${SUBFOLDER}"
