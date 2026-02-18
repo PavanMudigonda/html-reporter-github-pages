@@ -162,6 +162,14 @@ runs:
       run: |
         set -e
         CURRENT_BRANCH=$(git branch --show-current)
+        # Fallback to SHA if in detached HEAD state (common in GitHub Actions)
+        if [[ -z "$CURRENT_BRANCH" ]]; then
+          CURRENT_REF=$(git rev-parse HEAD)
+          echo "In detached HEAD state, will restore to commit: $CURRENT_REF"
+        else
+          CURRENT_REF="$CURRENT_BRANCH"
+          echo "Current branch: $CURRENT_BRANCH"
+        fi
         STASHED=false
         if [[ -n $(git status -s) ]]; then
           git stash push --keep-index --include-untracked || true
@@ -183,8 +191,8 @@ runs:
           git push -u origin "${{ inputs.gh_pages }}"
         fi;
 
-        # Switch back to the original branch
-        git checkout "${CURRENT_BRANCH}"
+        # Switch back to the original branch or commit
+        git checkout "$CURRENT_REF"
 
         # Restore the stash if there was one
         if [[ "$STASHED" == true ]]; then
