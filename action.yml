@@ -192,11 +192,7 @@ runs:
         fi;
 
         # Switch back to the original branch or commit
-        if [[ -n "$CURRENT_BRANCH" ]]; then
-          git checkout "$CURRENT_BRANCH"
-        else
-          git checkout "$CURRENT_REF"
-        fi
+        git checkout "$CURRENT_REF"
 
         # Restore the stash if there was one
         if [[ "$STASHED" == true ]]; then
