@@ -176,8 +176,8 @@ runs:
           STASHED=true
         fi;
 
-        # Check if the remote branch exists
-        if git ls-remote --exit-code --heads "https://github.com/${{ github.repository }}.git" "${{ inputs.gh_pages }}"; then
+        # Check if the remote branch exists (use token for private repo support)
+        if git ls-remote --exit-code --heads "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" "${{ inputs.gh_pages }}"; then
           echo "REMOTE BRANCH EXISTS"
         else
           git config --local user.email "$GIT_USER_EMAIL"
