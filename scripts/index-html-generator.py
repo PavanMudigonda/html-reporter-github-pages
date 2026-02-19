@@ -9,6 +9,21 @@ from urllib.parse import quote
 
 DEFAULT_OUTPUT_FILE = 'index.html'
 
+# Marker embedded in every navigation index.html we generate.
+# Its presence tells us the file is ours; absence means it is a user-owned report
+# that must never be overwritten.
+GENERATED_MARKER = '<!-- html-reporter-github-pages:navigation -->'
+
+
+def is_generated_index(index_path):
+    """Return True when index_path was written by this script (contains GENERATED_MARKER)."""
+    try:
+        with open(index_path, 'r', encoding='utf-8', errors='ignore') as fh:
+            # The marker is placed near the top; reading 512 bytes is enough.
+            return GENERATED_MARKER in fh.read(512)
+    except OSError:
+        return False
+
 
 def process_dir(top_dir, opts):
     glob_patt = opts.filter or '*'
@@ -20,13 +35,22 @@ def process_dir(top_dir, opts):
     if opts.verbose:
         print(f'Traversing dir {path_top_dir.absolute()}')
 
+    # Safety guard: never overwrite a user-owned index.html.
+    # If the file exists and does NOT contain our marker it belongs to the user
+    # (e.g. a renamed cucumber.html or any other HTML report).  Skip silently so
+    # the report remains intact and the navigation is not clobbered on top of it.
+    if index_path.exists() and not is_generated_index(index_path):
+        print(f'::notice::Skipping navigation index.html generation in '
+              f'{path_top_dir.absolute()} — existing index.html is a user report, not a generated navigation file.')
+        return
+
     try:
         index_file = open(index_path, 'w')
     except Exception as e:
         print('cannot create file %s %s' % (index_path, e))
         return
 
-    index_file.write("""<!DOCTYPE html>
+    index_file.write(GENERATED_MARKER + "\n" + """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
