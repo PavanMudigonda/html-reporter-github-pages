@@ -487,19 +487,19 @@ runs:
                   # Validate filename contains only safe characters to prevent XSS
                   if [[ "${HTML_BASENAME}" =~ ^[a-zA-Z0-9._\ -]+$ ]]; then
                     echo "::notice::No index.html found in test results. Creating redirect from index.html to ${HTML_BASENAME}"
-                    cat > "${RUN_DEST}/index.html" <<EOF
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=${HTML_BASENAME}">
-  <title>Redirecting to ${HTML_BASENAME}</title>
-</head>
-<body>
-  <p>Redirecting to <a href="${HTML_BASENAME}">${HTML_BASENAME}</a>...</p>
-</body>
-</html>
-EOF
+                    printf '%s\n' \
+                      '<!DOCTYPE html>' \
+                      '<html>' \
+                      '<head>' \
+                      '  <meta charset="utf-8">' \
+                      "  <meta http-equiv=\"refresh\" content=\"0; url=${HTML_BASENAME}\">" \
+                      "  <title>Redirecting to ${HTML_BASENAME}</title>" \
+                      '</head>' \
+                      '<body>' \
+                      "  <p>Redirecting to <a href=\"${HTML_BASENAME}\">${HTML_BASENAME}</a>...</p>" \
+                      '</body>' \
+                      '</html>' \
+                      > "${RUN_DEST}/index.html"
                   else
                     echo "::warning::HTML file '${HTML_BASENAME}' contains unsafe characters; skipping redirect index.html creation"
                   fi
