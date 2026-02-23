@@ -1,4 +1,4 @@
-# PavanMudigonda/html-reporter-github-pages@v1.5
+# PavanMudigonda/html-reporter-github-pages@v1.54
 
 ## Enhanced GitHub Pages HTML Reporter
 
@@ -32,7 +32,7 @@ jobs:
       pages: write     # Optional: enables automatic GitHub Pages configuration via API
     steps:
       - uses: actions/checkout@v4
-      - uses: PavanMudigonda/html-reporter-github-pages@v1.5
+      - uses: PavanMudigonda/html-reporter-github-pages@v1.54
         with:
           test_results: test-results
           # No need to specify token - uses GITHUB_TOKEN automatically
@@ -48,7 +48,7 @@ jobs:
 If you need to push to a different repository or require additional permissions:
 
 ```yaml
-- uses: PavanMudigonda/html-reporter-github-pages@v1.5
+- uses: PavanMudigonda/html-reporter-github-pages@v1.54
   with:
     test_results: test-results
     token: ${{ secrets.GH_PAT }}  # PAT with repo and pages:write permissions
@@ -82,7 +82,7 @@ jobs:
         run: npm test  # or your test command
       
       - name: Deploy Report to GitHub Pages
-        uses: PavanMudigonda/html-reporter-github-pages@v1.5
+        uses: PavanMudigonda/html-reporter-github-pages@v1.54
         with:
           test_results: test-results
           keep_reports: 20
@@ -115,7 +115,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Deploy Report to External GitHub Pages
-        uses: PavanMudigonda/html-reporter-github-pages@v1.5
+        uses: PavanMudigonda/html-reporter-github-pages@v1.54
         with:
           test_results: test-results
           keep_reports: 20
@@ -152,7 +152,7 @@ jobs:
         run: npm test  # Should generate allure-results folder
       
       - name: Deploy Allure Report to GitHub Pages
-        uses: PavanMudigonda/html-reporter-github-pages@v1.5
+        uses: PavanMudigonda/html-reporter-github-pages@v1.54
         with:
           test_results: allure-results
           allure_report_generate_flag: true
