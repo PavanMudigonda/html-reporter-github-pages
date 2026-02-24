@@ -2,17 +2,6 @@
 
 ## Enhanced GitHub Pages HTML Reporter
 
-**Major improvements in v1.5:**
-- ✅ **Enhanced Branch Management**: Better orphan branch creation with proper stashing
-- ✅ **Robust External Repository Support**: Improved handling of external repositories with fallback mechanisms  
-- ✅ **Better GitHub CLI Integration**: Uses `sersoft-gmbh/setup-gh-cli-action@v2.0.1` for reliable CLI setup
-- ✅ **Improved Error Handling**: Enhanced API calls with `--silent` flag and better error messages
-- ✅ **Advanced Configuration**: New `use_actions_summary` input for controlling job summary outputs
-- ✅ **Enhanced Environment Files**: More comprehensive environment.properties with Git metadata
-- ✅ **Java 17 Support**: Updated from Java 11 to Java 17 for better Allure report generation
-- ✅ **Force Orphan Protection**: Added `force_orphan: false` to prevent accidental history loss
-- ✅ **Better Script Management**: Scripts now bundled with action instead of downloading at runtime
-
 **If you like my Github Action, please STAR ⭐ it**
 
 ## ⚠️ Important: Permissions Required
@@ -86,8 +75,8 @@ jobs:
         with:
           test_results: test-results
           keep_reports: 20
-          gh_pages: gh_pages # BRANCH NAME you like
-          subfolder: docs  # Level 1 Folder Structure you like
+          gh_pages: gh_pages # BRANCH NAME you like #defaults to gh_pages #do not modify if you are not sure
+          subfolder: docs  # Level 1 Folder Structure you like #defaults to docs #do not modify if you are not sure
           tool_name: cucumber # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
@@ -119,8 +108,8 @@ jobs:
         with:
           test_results: test-results
           keep_reports: 20
-          gh_pages: gh_pages # BRANCH NAME you like
-          subfolder: docs  # Level 1 Folder Structure you like
+          gh_pages: gh_pages # BRANCH NAME you like #defaults to gh_pages #do not modify if you are not sure
+          subfolder: docs  # Level 1 Folder Structure you like #defaults to docs #do not modify if you are not sure
           tool_name: cucumber # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           env: QA # Level 4 Folder Structure you like
@@ -157,8 +146,8 @@ jobs:
           test_results: allure-results
           allure_report_generate_flag: true
           keep_reports: 20
-          gh_pages: gh_pages # BRANCH NAME you like
-          subfolder: docs  # Level 1 Folder Structure you like
+          gh_pages: gh_pages # BRANCH NAME you like #defaults to gh_pages #do not modify if you are not sure
+          subfolder: docs  # Level 1 Folder Structure you like #defaults to docs #do not modify if you are not sure
           tool_name: allure # Level 2 Folder Structure you like
           workflow_name: ${{ github.workflow }} # Level 3 Folder Structure you like
           # token defaults to GITHUB_TOKEN - no need to specify if permissions.contents: write is set
@@ -194,6 +183,8 @@ This Action defines the following formal inputs.
 |**`order`** | true | descending | Order of Folders, ascending or descending.
 |**`allure_report_generate_flag`** | false | false | If you are working with Allure and if you would like to have this action generate Allure Report out of the RAW Results, then select True. Make sure you provide Allure RAW Results Path for input **test_results**
 | **`token`** | false | GITHUB_TOKEN | GitHub token for authentication. For same-repo deployments, the default GITHUB_TOKEN works if you grant `permissions: contents: write` in your workflow. For external repository deployments, you MUST provide a Personal Access Token (PAT) with `repo` scope.
+|**`use_actions_summary`** | false | true | Write GitHub Pages URLs to the GitHub Actions Job Summary.
+|**`force_orphan`** | false | true | Create a fresh orphan commit on each deploy, eliminating git history to keep the gh-pages branch small. Recommended for large or frequent deployments. Set to `false` if you need to retain commit history on the gh-pages branch.
 
 ## Outputs
 

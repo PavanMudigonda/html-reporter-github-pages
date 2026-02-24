@@ -22,11 +22,11 @@ inputs:
     required: false
     default: 'results-history'
   tool_name:
-    description: 'Folder for results history'
+    description: 'Tool name used as a subfolder in the report directory hierarchy'
     required: false
     default: ''  
   workflow_name:
-    description: 'Folder for results history'
+    description: 'Workflow name used as a subfolder in the report directory hierarchy'
     required: false
     default: '${{ github.workflow }}'
   env:
@@ -69,6 +69,10 @@ inputs:
     default: 'false'
   use_actions_summary:
     description: 'To write outputs to actions summary'
+    required: false
+    default: 'true'
+  force_orphan:
+    description: 'Create a fresh orphan commit on each deploy, eliminating git history to keep the gh-pages branch small. Recommended for large/frequent deployments.'
     required: false
     default: 'true'
 outputs:
@@ -132,7 +136,7 @@ runs:
         # Warn about external_repository usage
         if [[ -n "${{ inputs.external_repository }}" ]]; then
           echo "::warning::Using external_repository requires a Personal Access Token (PAT) with 'repo' scope."
-          echo "::warning::Make sure you provide: token: \$"{{ secrets.GH_PAT }}" in your workflow file"
+          echo '::warning::Make sure you provide: token: ${{ secrets.GH_PAT }} in your workflow file'
           echo "::warning::The default GITHUB_TOKEN cannot push to external repositories."
         fi
         
@@ -146,7 +150,7 @@ runs:
         github-token: ${{ inputs.token }}
 
     - name: Java Install for Allure
-      if: ${{ inputs.allure_report_generate_flag == 'true' && env.JAVA_PRESENT == 'false'}}
+      if: ${{ inputs.allure_report_generate_flag == 'true' }}
       uses: actions/setup-java@v4.2.1
       with:
         distribution: 'corretto'
@@ -243,12 +247,12 @@ runs:
             fi
           fi
           echo "::notice::Checkout: ${{ inputs.external_repository }} using ${USING}"
-          echo "ref-exists=true" >> $GITHUB_ENV
+          echo "ref-exists=true" >> $GITHUB_OUTPUT
         else
           if git ls-remote --heads --quiet --exit-code "https://${{ inputs.token }}@github.com/${{ inputs.external_repository }}.git" ${{ inputs.gh_pages }}
           then
             echo "::notice::Checkout: ${{ inputs.external_repository }} using ${{ inputs.gh_pages }}"
-            echo "ref-exists=true" >> $GITHUB_ENV
+            echo "ref-exists=true" >> $GITHUB_OUTPUT
           else
             USING="$(gh api /repos/${{ inputs.external_repository }} --jq '.default_branch' 2>/dev/null || echo "main")"
             # Handle null or empty response
@@ -256,8 +260,8 @@ runs:
               USING="main"
             fi
             echo "::notice::Checkout: ${{ inputs.external_repository }} does not have ref ${{ inputs.gh_pages }} (fallback to ${USING})"
-            echo "ref-exists=false" >> $GITHUB_ENV
-            echo "default-branch=${USING}" >> $GITHUB_ENV
+            echo "ref-exists=false" >> $GITHUB_OUTPUT
+            echo "default-branch=${USING}" >> $GITHUB_OUTPUT
           fi
         fi
 
@@ -266,7 +270,7 @@ runs:
       with:
         path: ${{ inputs.gh_pages }}
         repository: ${{ inputs.external_repository }}
-        ref: ${{ inputs.ref }}
+        ref: ${{ inputs.gh_pages }}
         token: ${{ inputs.token }}
         persist-credentials: false
 
@@ -320,26 +324,14 @@ runs:
         TOOL_NAME: "${{ inputs.tool_name }}"
         ORDER: "${{ inputs.order }}"
         GH_TOKEN: "${{ inputs.token }}"
+        TEST_RESULTS: "${{ inputs.test_results }}"
+        USE_ACTIONS_SUMMARY: "${{ inputs.use_actions_summary }}"
+        WORKFLOW_NAME: "${{ inputs.workflow_name }}"
       run: |
-        export GH_PAGES_ACTION_HOME=$PWD
-        export ENV="${{ inputs.env }}"
-        export TOKEN="${{ inputs.token }}"
-        export TEST_RESULTS="${{ inputs.test_results }}"
-        export GH_PAGES="${{ inputs.gh_pages }}"
-        export SUBFOLDER="${{ inputs.subfolder }}"
-        export KEEP_REPORTS="${{ inputs.keep_reports }}"
-        export GITHUB_RUN_ID="${{ inputs.github_run_id }}"
-        export REPO="${{ inputs.github_repo }}"
-        export REPORT_URL="${{ inputs.report_url }}"
-        export EXTERNAL_REPO="${{ inputs.external_repository }}"
-        export RUNNER_OS="${{ runner.os }}"
-        export GITHUB_RUN_NUM="${{ inputs.github_run_num }}"
-        export TOOL_NAME="${{ inputs.tool_name }}"
-        export WORKFLOW_NAME="${{ inputs.workflow_name }}"
-        export ORDER="${{ inputs.order }}"
-        export USE_ACTIONS_SUMMARY="${{ inputs.use_actions_summary }}"
-        export GITHUB_WORKSPACE="${{ env.GITHUB_WORKSPACE }}"
-        export WORKFLOW_NAME=$(echo "${{ inputs.workflow_name }}" | tr " " "-")
+        set -e
+        GH_PAGES_ACTION_HOME="$PWD"
+        # Transform workflow name: replace spaces with hyphens
+        WORKFLOW_NAME=$(echo "${WORKFLOW_NAME}" | tr " " "-")
         #--------------------------------------------------------
         mkdir -p "${GH_PAGES}"
         cd "${GH_PAGES}"
@@ -348,7 +340,7 @@ runs:
         fi;
         cd "${GH_PAGES_ACTION_HOME}"
         # Set variables
-        if [[ ${{ env.ALLURE_FLAG }} == true || ${{ env.ALLURE_FLAG }} == 'true' ]]; then
+        if [[ "${ALLURE_FLAG}" == 'true' ]]; then
           ALLURE_REPORT="allure-report"
         fi;
         #-------------------------------------------------------------------
@@ -363,21 +355,20 @@ runs:
         fi;
         #-------------------------------------------------------------------
         delete_folders_func () {
-          COUNT=$( ( ls | wc -l ) )
-          echo "count folders in results-history: ${COUNT}"
+          # Count only numeric run directories (not index.html, last-history, etc.)
+          COUNT=$(find . -maxdepth 1 -type d -regex '.*/[0-9]+' 2>/dev/null | wc -l)
+          echo "count numeric run folders in results-history: ${COUNT}"
           echo "keep reports count ${KEEP_REPORTS}"
-          KEEP_REPORTS=$((KEEP_REPORTS+1))
-          echo "if ${COUNT} > ${KEEP_REPORTS}"
           if (( COUNT > KEEP_REPORTS )); then
             echo "remove old reports"
-            ls | sort -n | head -n -$((${KEEP_REPORTS}-2)) | xargs rm -rv;
+            find . -maxdepth 1 -type d -regex '.*/[0-9]+' -print0 | sort -zn | head -zn -"${KEEP_REPORTS}" | xargs -0 rm -rv
             if [ -f index.html ]; then
               echo "remove index.html"
-              rm index.html -rv
+              rm -rv index.html
             fi;
             if [ -d last-history ]; then
               echo "remove last-history folder"
-              rm last-history -rv
+              rm -rv last-history
             fi;            
           fi;
         }
@@ -406,7 +397,7 @@ runs:
             REPORT_URL="${REPORT_URL%/}"
             echo $REPORT_URL
             echo REPORT_URL=$REPORT_URL >> $GITHUB_ENV
-            if [[ "${USE_ACTIONS_SUMMARY}" != 'false' || "${USE_ACTIONS_SUMMARY}" != false ]]; then
+            if [[ "${USE_ACTIONS_SUMMARY}" != 'false' ]]; then
               echo "#### GitHub Pages HTML Reports" >> $GITHUB_STEP_SUMMARY
             fi;
             echo "REPORT_URL=${REPORT_URL}" >> $GITHUB_OUTPUT        
@@ -474,7 +465,7 @@ runs:
         copy_current_results_func () {
           mkdir -p "./${GH_PAGES}/${GITHUB_RUN_NUM}"
           # If we are not dealing with Allure Reports then copy the test results
-          if [[ ${{ env.ALLURE_FLAG }} == false || ${{ env.ALLURE_FLAG }} == 'false' || ${{ env.ALLURE_FLAG }} == '' ]]; then
+          if [[ "${ALLURE_FLAG}" != 'true' ]]; then
             # Check if source directory exists and has content before copying
             if [ -d "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}" ] && [ "$(ls -A "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}" 2>/dev/null)" ]; then
               cp -r "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"/. "./${GH_PAGES}/${GITHUB_RUN_NUM}"
@@ -528,7 +519,7 @@ runs:
         #-------------------------------------------------------------------
         echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_OUTPUT
         # Publish Job Summary
-        if [[ "${USE_ACTIONS_SUMMARY}" != 'false' || "${USE_ACTIONS_SUMMARY}" != false ]]; then
+        if [[ "${USE_ACTIONS_SUMMARY}" != 'false' ]]; then
           echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
           echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_STEP_SUMMARY
         fi;
@@ -546,48 +537,24 @@ runs:
         generate_index_html_func
         cd "$GH_PAGES_ACTION_HOME"
         #-------------------------------------------------------------------   
-        if [[ ${SUBFOLDER} == "" ]]; then
-          cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}"
-          generate_index_html_func
-          cd "$GH_PAGES_ACTION_HOME"
-        fi;
-        if [[ ${SUBFOLDER} != "" ]]; then
-            cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}"
-            generate_index_html_func
-            cd "$GH_PAGES_ACTION_HOME"
-            if [[ ${TOOL_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}/${TOOL_NAME}"
-                generate_index_html_func
-                cd "$GH_PAGES_ACTION_HOME"
-            fi;
-            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}"
-                generate_index_html_func
-                cd "$GH_PAGES_ACTION_HOME"
-            fi;
-            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${SUBFOLDER}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
-                generate_index_html_func
-                cd "$GH_PAGES_ACTION_HOME"
-            fi;          
-        fi;
-        if [[ ${SUBFOLDER} == "" ]]; then
-            if [[ ${TOOL_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${TOOL_NAME}"
-                generate_index_html_func
-                cd "$GH_PAGES_ACTION_HOME"
-            fi;
-            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${TOOL_NAME}/${WORKFLOW_NAME}"
-                generate_index_html_func
-                cd "$GH_PAGES_ACTION_HOME"
-            fi;
-            if [[ ${TOOL_NAME} != "" && ${WORKFLOW_NAME} != "" && ${ENV} != "" ]]; then
-                cd "${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}/${TOOL_NAME}/${WORKFLOW_NAME}/${ENV}"
-                generate_index_html_func
-                cd "$GH_PAGES_ACTION_HOME"
-            fi;
-        fi;
+        # Generate index.html at each level of the directory hierarchy
+        # Build path segments: base / subfolder / tool / workflow / env
+        INDEX_DIR="${GH_PAGES_ACTION_HOME}/${GH_PAGES_BASE}"
+        # Always generate at the base level
+        cd "${INDEX_DIR}"
+        generate_index_html_func
+        cd "$GH_PAGES_ACTION_HOME"
+        # Walk through each optional path segment and generate index.html
+        for SEGMENT in "${SUBFOLDER}" "${TOOL_NAME}" "${WORKFLOW_NAME}" "${ENV}"; do
+          if [[ -n "${SEGMENT}" ]]; then
+            INDEX_DIR="${INDEX_DIR}/${SEGMENT}"
+            if [[ -d "${INDEX_DIR}" ]]; then
+              cd "${INDEX_DIR}"
+              generate_index_html_func
+              cd "$GH_PAGES_ACTION_HOME"
+            fi
+          fi
+        done
         #-------------------------------------------------------------------
         cd "$GH_PAGES_ACTION_HOME"
         # Manage History and Last History Folders
@@ -604,7 +571,7 @@ runs:
         fi;
         #--------------------------------------------------------------------
         # Allure Report Generation
-        if [[ ${{ env.ALLURE_FLAG }} == true || ${{ env.ALLURE_FLAG }} == 'true' ]]; then
+        if [[ "${ALLURE_FLAG}" == 'true' ]]; then
           cd "$GH_PAGES_ACTION_HOME"
           npm -g install allure-commandline
           npx allure --version
@@ -642,7 +609,7 @@ runs:
       uses: peaceiris/actions-gh-pages@v4.0.0
       with:
         github_token: ${{ inputs.token }}
-        force_orphan: false
+        force_orphan: ${{ inputs.force_orphan }}
         publish_branch: ${{ inputs.gh_pages }}
         keep_files: false
         publish_dir: ${{ inputs.subfolder != '' && format('{0}/{1}', inputs.gh_pages, inputs.subfolder) || inputs.gh_pages }}
@@ -655,28 +622,40 @@ runs:
       with:
         personal_token: ${{ inputs.token }}
         publish_branch: ${{ inputs.gh_pages }}
-        force_orphan: false
+        force_orphan: ${{ inputs.force_orphan }}
         publish_dir: ${{ inputs.subfolder != '' && format('{0}/{1}', inputs.gh_pages, inputs.subfolder) || inputs.gh_pages }}
         external_repository: ${{ inputs.external_repository }}
         keep_files: false
         destination_dir: ${{ inputs.subfolder }}
         allow_empty_commit: true
 
-    - name: generate github pages site - same repo
-      if: ${{ ( inputs.external_repository == '' ) && ( inputs.subfolder == '' ) }}
+    - name: Configure GitHub Pages site
       shell: bash
       env: 
         GH_TOKEN: ${{ inputs.token }}
+        PAGES_REPO: ${{ inputs.external_repository != '' && inputs.external_repository || github.repository }}
+        SOURCE_PATH: ${{ inputs.subfolder != '' && format('/{0}', inputs.subfolder) || '/' }}
+        GH_PAGES_BRANCH: ${{ inputs.gh_pages }}
+        EXTERNAL_REPO: ${{ inputs.external_repository }}
+        REPO_OWNER: ${{ github.repository_owner }}
+        REPO_NAME: ${{ github.event.repository.name }}
       run: |
         #----------------------------------------------------------
-        # FINALLY DO THE GH PAGES SITE CREATION
+        # GitHub Pages Site Configuration (consolidated)
         #----------------------------------------------------------
         set -e
-        echo "Checking GitHub Pages configuration..."
+        IS_EXTERNAL="false"
+        if [[ -n "${EXTERNAL_REPO}" ]]; then
+          IS_EXTERNAL="true"
+          echo "Checking GitHub Pages configuration for external repository..."
+        else
+          echo "Checking GitHub Pages configuration..."
+        fi
+
         gh api \
           -H "Accept: application/vnd.github+json" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
-          /repos/${{ github.repository }}/pages --silent > gh-pages.txt 2>&1 || true;
+          "/repos/${PAGES_REPO}/pages" --silent > gh-pages.txt 2>&1 || true;
         
         GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
         
@@ -687,15 +666,20 @@ runs:
             --method POST \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ github.repository }}/pages \
-             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
+            "/repos/${PAGES_REPO}/pages" \
+             -f "source[branch]=${GH_PAGES_BRANCH}" -f "source[path]=${SOURCE_PATH}" --silent > gh-pages-site.json 2>&1 || true;
           
           GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
           if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
             echo "::warning::API call to create GitHub Pages site failed (404). Please manually enable GitHub Pages in Settings -> Pages."
           elif echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
             echo "::warning::API call to create GitHub Pages site failed (403 - Insufficient permissions)."
-            echo "::warning::To fix this, add 'pages: write' permission to your workflow, or manually enable GitHub Pages in Settings -> Pages."
+            if [[ "${IS_EXTERNAL}" == "true" ]]; then
+              echo "::warning::For external repositories, you must use a Personal Access Token (PAT) with 'repo' and 'pages: write' scopes."
+              echo '::warning::Please provide: token: ${{ secrets.GH_PAT }} in your workflow file'
+            else
+              echo "::warning::To fix this, add 'pages: write' permission to your workflow, or manually enable GitHub Pages in Settings -> Pages."
+            fi
           else
             echo "::notice::GitHub Pages configured successfully via API"
           fi;
@@ -704,7 +688,6 @@ runs:
           echo "GitHub Pages already configured"
           
           # Check the build_type to determine if we should update
-          # Try jq first (more reliable), fall back to awk
           if command -v jq &> /dev/null; then
             BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
           else
@@ -714,32 +697,33 @@ runs:
           echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
           
           if [ "$BUILD_TYPE" = "workflow" ]; then
-            # GitHub Actions deployment - don't try to update source branch
             echo "::notice::GitHub Pages is using 'GitHub Actions' deployment method"
             echo "::notice::Source branch configuration is not applicable for Actions deployments"
             echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
           elif [ "$BUILD_TYPE" = "legacy" ]; then
-            # Legacy branch-based deployment - try to update the source branch
             echo "Updating GitHub Pages source branch configuration..."
             gh api \
               --method PUT \
               -H "Accept: application/vnd.github+json" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
+              "/repos/${PAGES_REPO}/pages" \
+               -f "source[branch]=${GH_PAGES_BRANCH}" -f "source[path]=${SOURCE_PATH}" --silent > gh-pages-site.json 2>&1 || true;
             
             GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
             if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
               echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
             elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
               echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::To fix this, add 'pages: write' permission to your workflow."
+              if [[ "${IS_EXTERNAL}" == "true" ]]; then
+                echo "::warning::For external repositories, ensure your PAT has 'repo' and 'pages: write' scopes."
+              else
+                echo "::warning::To fix this, add 'pages: write' permission to your workflow."
+              fi
               echo "::notice::Your deployment was successful, but source branch settings were not updated"
             else
               echo "::notice::GitHub Pages source branch updated successfully"
             fi
           else
-            # Unknown or empty build_type - assume deployment is complete
             echo "::notice::GitHub Pages deployment method is unknown or not detected"
             echo "::notice::Your content has been deployed successfully via peaceiris/actions-gh-pages"
             echo "::notice::If this is the first deployment, you may need to manually enable GitHub Pages in Settings → Pages"
@@ -747,299 +731,19 @@ runs:
         fi;
         
         # Get and display the GitHub Pages URL
-        REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ github.repository }}/pages --jq '.html_url' 2>/dev/null | xargs || echo "")
+        REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${PAGES_REPO}/pages" --jq '.html_url' 2>/dev/null | xargs || echo "")
         if [ -n "$REPORT_URL" ]; then
           REPORT_URL="${REPORT_URL%/}"
-          echo "✅ Your GitHub Pages URL: $REPORT_URL"
+          echo "Your GitHub Pages URL: $REPORT_URL"
         else
-          echo "::notice::GitHub Pages URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          if [[ "${IS_EXTERNAL}" == "true" ]]; then
+            EXT_OWNER="${EXTERNAL_REPO%%/*}"
+            EXT_NAME="${EXTERNAL_REPO##*/}"
+            echo "::notice::GitHub Pages URL: https://${EXT_OWNER}.github.io/${EXT_NAME}"
+          else
+            echo "::notice::GitHub Pages URL: https://${REPO_OWNER}.github.io/${REPO_NAME}"
+          fi
         fi
-
-    - name: generate github pages site - different repo
-      shell: bash
-      if: ${{ ( inputs.external_repository != '' ) && ( inputs.subfolder == '' ) }}
-      env: 
-        GH_TOKEN: ${{ inputs.token }}
-      run: |
-        #-----------------------------------------------------------------------------------------------------------------------------------------------------
-        # FINALLY DO THE GH PAGES SITE CREATION
-        #-----------------------------------------------------------------------------------------------------------------------------------------------------
-        set -e
-        echo "Checking GitHub Pages configuration for external repository..."
-        gh api \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.txt 2>&1 || true;
         
-        GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
-        
-        if echo "${GH_SITE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-          # GitHub Pages not configured - try to create it
-          echo "::notice::GitHub Pages not yet configured for external repo, attempting to enable it via API"
-          gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ inputs.external_repository }}/pages \
-             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
-          
-          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
-          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-            echo "::warning::API call to create GitHub Pages site failed (404). Please manually enable GitHub Pages in Settings -> Pages."
-          elif echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-            echo "::warning::API call to create GitHub Pages site failed (403 - Insufficient permissions)."
-            echo "::warning::For external repositories, you must use a Personal Access Token (PAT) with 'repo' and 'pages: write' scopes."
-            echo "::warning::Please provide: token: \$"{{ secrets.GH_PAT }}" in your workflow file"
-          else
-            echo "::notice::GitHub Pages configured successfully via API"
-          fi;
-        else
-          # GitHub Pages already exists - check its configuration
-          echo "GitHub Pages already configured for external repository"
-          
-          # Check the build_type to determine if we should update
-          # Try jq first (more reliable), fall back to awk
-          if command -v jq &> /dev/null; then
-            BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
-          else
-            BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt 2>/dev/null || echo "")
-          fi
-          
-          echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
-          
-          if [ "$BUILD_TYPE" = "workflow" ]; then
-            # GitHub Actions deployment - don't try to update source branch
-            echo "::notice::GitHub Pages is using 'GitHub Actions' deployment method"
-            echo "::notice::Source branch configuration is not applicable for Actions deployments"
-            echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
-          elif [ "$BUILD_TYPE" = "legacy" ]; then
-            # Legacy branch-based deployment - try to update the source branch
-            echo "Updating GitHub Pages source branch configuration..."
-            gh api \
-              --method PUT \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ inputs.external_repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/" --silent > gh-pages-site.json 2>&1 || true;
-            
-            GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
-            if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-              echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
-            elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-              echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::For external repositories, ensure your PAT has 'repo' and 'pages: write' scopes."
-              echo "::notice::Your deployment was successful, but source branch settings were not updated"
-            else
-              echo "::notice::GitHub Pages source branch updated successfully"
-            fi
-          else
-            # Unknown or empty build_type - assume deployment is complete
-            echo "::notice::GitHub Pages deployment method is unknown or not detected"
-            echo "::notice::Your content has been deployed successfully via peaceiris/actions-gh-pages"
-            echo "::notice::If this is the first deployment, you may need to manually enable GitHub Pages in Settings → Pages"
-          fi
-        fi;
-        
-        # Get and display the GitHub Pages URL
-        REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs || echo "")
-        if [ -n "$REPORT_URL" ]; then
-          REPORT_URL="${REPORT_URL%/}"
-          echo "✅ Your GitHub Pages URL: $REPORT_URL"
-        else
-          REPO_OWNER="${{ inputs.external_repository }}"
-          REPO_OWNER="${REPO_OWNER%%/*}"
-          REPO_NAME="${{ inputs.external_repository }}"
-          REPO_NAME="${REPO_NAME##*/}"
-          echo "::notice::GitHub Pages URL: https://${REPO_OWNER}.github.io/${REPO_NAME}"
-        fi
-
-    - name: generate github pages site - same repo
-      if: ${{ ( inputs.external_repository == '' ) && ( inputs.subfolder != '' ) }}
-      shell: bash
-      env: 
-        GH_TOKEN: ${{ inputs.token }}
-      run: |
-        #----------------------------------------------------------
-        # FINALLY DO THE GH PAGES SITE CREATION
-        #----------------------------------------------------------
-        set -e
-        echo "Checking GitHub Pages configuration..."
-        gh api \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          /repos/${{ github.repository }}/pages --silent > gh-pages.txt 2>&1 || true;
-        
-        GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
-        
-        if echo "${GH_SITE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-          # GitHub Pages not configured - try to create it
-          echo "::notice::GitHub Pages not yet configured, attempting to enable it via API"
-          gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ github.repository }}/pages \
-             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
-          
-          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
-          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-            echo "::warning::API call to create GitHub Pages site failed (404). Please manually enable GitHub Pages in Settings -> Pages."
-          elif echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-            echo "::warning::API call to create GitHub Pages site failed (403 - Insufficient permissions)."
-            echo "::warning::To fix this, add 'pages: write' permission to your workflow, or manually enable GitHub Pages in Settings -> Pages."
-          else
-            echo "::notice::GitHub Pages configured successfully via API"
-          fi;
-        else
-          # GitHub Pages already exists - check its configuration
-          echo "GitHub Pages already configured"
-          
-          # Check the build_type to determine if we should update
-          # Try jq first (more reliable), fall back to awk
-          if command -v jq &> /dev/null; then
-            BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
-          else
-            BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt 2>/dev/null || echo "")
-          fi
-          
-          echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
-          
-          if [ "$BUILD_TYPE" = "workflow" ]; then
-            # GitHub Actions deployment - don't try to update source branch
-            echo "::notice::GitHub Pages is using 'GitHub Actions' deployment method"
-            echo "::notice::Source branch configuration is not applicable for Actions deployments"
-            echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
-          elif [ "$BUILD_TYPE" = "legacy" ]; then
-            # Legacy branch-based deployment - try to update the source branch
-            echo "Updating GitHub Pages source branch configuration..."
-            gh api \
-              --method PUT \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
-            
-            GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
-            if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-              echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
-            elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-              echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::To fix this, add 'pages: write' permission to your workflow."
-              echo "::notice::Your deployment was successful, but source branch settings were not updated"
-            else
-              echo "::notice::GitHub Pages source branch updated successfully"
-            fi
-          else
-            # Unknown or empty build_type - assume deployment is complete
-            echo "::notice::GitHub Pages deployment method is unknown or not detected"
-            echo "::notice::Your content has been deployed successfully via peaceiris/actions-gh-pages"
-            echo "::notice::If this is the first deployment, you may need to manually enable GitHub Pages in Settings → Pages"
-          fi
-        fi;
-        
-        # Get and display the GitHub Pages URL
-        REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ github.repository }}/pages --jq '.html_url' 2>/dev/null | xargs || echo "")
-        if [ -n "$REPORT_URL" ]; then
-          REPORT_URL="${REPORT_URL%/}"
-          echo "✅ Your GitHub Pages URL: $REPORT_URL"
-        else
-          echo "::notice::GitHub Pages URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
-        fi
-
-    - name: generate github pages site - different repo
-      shell: bash
-      if: ${{ ( inputs.external_repository != '' ) && ( inputs.subfolder != '' ) }}
-      env: 
-        GH_TOKEN: ${{ inputs.token }}
-      run: |
-        #-----------------------------------------------------------------------------------------------------------------------------------------------------
-        # FINALLY DO THE GH PAGES SITE CREATION
-        #-----------------------------------------------------------------------------------------------------------------------------------------------------
-        set -e
-        echo "Checking GitHub Pages configuration for external repository..."
-        gh api \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          /repos/${{ inputs.external_repository }}/pages --silent > gh-pages.txt 2>&1 || true;
-        
-        GH_SITE_MESSAGE=$(cat gh-pages.txt | xargs)
-        
-        if echo "${GH_SITE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-          # GitHub Pages not configured - try to create it
-          echo "::notice::GitHub Pages not yet configured for external repo, attempting to enable it via API"
-          gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ inputs.external_repository }}/pages \
-             -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
-          
-          GH_SITE_CREATION_MESSAGE=$(cat gh-pages-site.json | xargs)
-          if echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-            echo "::warning::API call to create GitHub Pages site failed (404). Please manually enable GitHub Pages in Settings -> Pages."
-          elif echo "${GH_SITE_CREATION_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-            echo "::warning::API call to create GitHub Pages site failed (403 - Insufficient permissions)."
-            echo "::warning::For external repositories, you must use a Personal Access Token (PAT) with 'repo' and 'pages: write' scopes."
-            echo "::warning::Please provide: token: \$"{{ secrets.GH_PAT }}" in your workflow file"
-          else
-            echo "::notice::GitHub Pages configured successfully via API"
-          fi;
-        else
-          # GitHub Pages already exists - check its configuration
-          echo "GitHub Pages already configured for external repository"
-          
-          # Check the build_type to determine if we should update
-          # Try jq first (more reliable), fall back to awk
-          if command -v jq &> /dev/null; then
-            BUILD_TYPE=$(jq -r '.build_type // ""' gh-pages.txt 2>/dev/null || echo "")
-          else
-            BUILD_TYPE=$(awk -F'"' '/"build_type"/ {print $4}' gh-pages.txt 2>/dev/null || echo "")
-          fi
-          
-          echo "Detected deployment method: ${BUILD_TYPE:-unknown}"
-          
-          if [ "$BUILD_TYPE" = "workflow" ]; then
-            # GitHub Actions deployment - don't try to update source branch
-            echo "::notice::GitHub Pages is using 'GitHub Actions' deployment method"
-            echo "::notice::Source branch configuration is not applicable for Actions deployments"
-            echo "::notice::Your deployment was successful via peaceiris/actions-gh-pages"
-          elif [ "$BUILD_TYPE" = "legacy" ]; then
-            # Legacy branch-based deployment - try to update the source branch
-            echo "Updating GitHub Pages source branch configuration..."
-            gh api \
-              --method PUT \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ inputs.external_repository }}/pages \
-               -f "source[branch]=${{ inputs.gh_pages }}" -f "source[path]=/${{ inputs.subfolder }}" --silent > gh-pages-site.json 2>&1 || true;
-            
-            GH_SITE_UPDATE_MESSAGE=$(cat gh-pages-site.json | xargs)
-            if echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Not Found (HTTP 404)'; then
-              echo "::warning::API call to update GitHub Pages site failed (404). The site should still work if already configured."
-            elif echo "${GH_SITE_UPDATE_MESSAGE}" | grep -q 'gh: Resource not accessible'; then
-              echo "::warning::API call to update GitHub Pages site failed (403 - Insufficient permissions)."
-              echo "::warning::For external repositories, ensure your PAT has 'repo' and 'pages: write' scopes."
-              echo "::notice::Your deployment was successful, but source branch settings were not updated"
-            else
-              echo "::notice::GitHub Pages source branch updated successfully"
-            fi
-          else
-            # Unknown or empty build_type - assume deployment is complete
-            echo "::notice::GitHub Pages deployment method is unknown or not detected"
-            echo "::notice::Your content has been deployed successfully via peaceiris/actions-gh-pages"
-            echo "::notice::If this is the first deployment, you may need to manually enable GitHub Pages in Settings → Pages"
-          fi
-        fi;
-        
-        # Get and display the GitHub Pages URL
-        REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${{ inputs.external_repository }}/pages --jq '.html_url' 2>/dev/null | xargs || echo "")
-        if [ -n "$REPORT_URL" ]; then
-          REPORT_URL="${REPORT_URL%/}"
-          echo "✅ Your GitHub Pages URL: $REPORT_URL"
-        else
-          REPO_OWNER="${{ inputs.external_repository }}"
-          REPO_OWNER="${REPO_OWNER%%/*}"
-          REPO_NAME="${{ inputs.external_repository }}"
-          REPO_NAME="${REPO_NAME##*/}"
-          echo "::notice::GitHub Pages URL: https://${REPO_OWNER}.github.io/${REPO_NAME}"
-        fi
+        # Clean up temp files
+        rm -f gh-pages.txt gh-pages-site.json
