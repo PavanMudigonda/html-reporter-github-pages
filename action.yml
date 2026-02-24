@@ -390,9 +390,20 @@ runs:
             echo "Replacing github pages url. NEW url ${REPORT_URL}"
         else
             REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" ${GH_PAGES_API} --jq '.html_url' 2>/dev/null | tr -d '"' | xargs || echo "")
-            # Handle null or empty response
-            if [[ "$REPORT_URL" == "null" || -z "$REPORT_URL" ]]; then
-              REPORT_URL=""
+            # Handle null, empty, or error responses (e.g. 403 when token lacks pages:read permission)
+            if [[ "$REPORT_URL" == "null" || -z "$REPORT_URL" || "$REPORT_URL" == *"Resource not accessible"* || "$REPORT_URL" != http* ]]; then
+              # Construct URL from repository name
+              if [[ -n "${EXTERNAL_REPO}" ]]; then
+                EXT_OWNER="${EXTERNAL_REPO%%/*}"
+                EXT_NAME="${EXTERNAL_REPO##*/}"
+                REPORT_URL="https://${EXT_OWNER}.github.io/${EXT_NAME}"
+              else
+                REPO_OWNER_NAME="${GITHUB_REPOSITORY%%/*}"
+                REPO_BASE_NAME="${GITHUB_REPOSITORY##*/}"
+                REPORT_URL="https://${REPO_OWNER_NAME}.github.io/${REPO_BASE_NAME}"
+              fi
+              echo "::notice::Could not fetch GitHub Pages URL via API (likely missing pages:read permission). Using constructed URL: ${REPORT_URL}"
+              echo "::notice::To get the exact URL, add 'pages: write' to your workflow permissions block."
             fi
             REPORT_URL="${REPORT_URL%/}"
             echo $REPORT_URL
@@ -732,17 +743,20 @@ runs:
         
         # Get and display the GitHub Pages URL
         REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${PAGES_REPO}/pages" --jq '.html_url' 2>/dev/null | xargs || echo "")
-        if [ -n "$REPORT_URL" ]; then
+        # Validate the response is a real URL (not a 403 error JSON body)
+        if [[ -n "$REPORT_URL" && "$REPORT_URL" == http* && "$REPORT_URL" != *"Resource not accessible"* ]]; then
           REPORT_URL="${REPORT_URL%/}"
           echo "Your GitHub Pages URL: $REPORT_URL"
         else
           if [[ "${IS_EXTERNAL}" == "true" ]]; then
             EXT_OWNER="${EXTERNAL_REPO%%/*}"
             EXT_NAME="${EXTERNAL_REPO##*/}"
-            echo "::notice::GitHub Pages URL: https://${EXT_OWNER}.github.io/${EXT_NAME}"
+            FALLBACK_URL="https://${EXT_OWNER}.github.io/${EXT_NAME}"
           else
-            echo "::notice::GitHub Pages URL: https://${REPO_OWNER}.github.io/${REPO_NAME}"
+            FALLBACK_URL="https://${REPO_OWNER}.github.io/${REPO_NAME}"
           fi
+          echo "::notice::GitHub Pages URL (constructed): ${FALLBACK_URL}"
+          echo "::notice::To get the exact URL via API, add 'pages: write' to your workflow permissions block."
         fi
         
         # Clean up temp files

@@ -194,3 +194,46 @@ This Action defines the following formal outputs.
 |-|-|-|-|
 | **`GITHUB_PAGES_WEBSITE_URL`**  | ${{ env.GITHUB_PAGES_WEBSITE_URL }} | GitHub Pages Home URL|you can use this to pass to subsequent patterns
 | **`PLEASE SEE NEXT COLUMN`**  | '${{ env.GITHUB_PAGES_WEBSITE_URL }}/${github.run_number}/index.html' | GitHub Pages Latest Run result URL|you can use this to pass to subsequent patterns
+
+## FAQ
+
+### Why do I see "Resource not accessible by integration" (403) when getting the GitHub Pages URL?
+
+The default `GITHUB_TOKEN` does **not** have permission to read GitHub Pages configuration via the API. The action will still deploy your reports correctly — only the URL lookup step is affected.
+
+**To fix it**, add `pages: write` to your workflow permissions:
+
+```yaml
+permissions:
+  contents: write  # Required: push to gh-pages branch
+  pages: write     # Optional: enables GitHub Pages API calls (URL lookup, auto-configuration)
+```
+
+If you don't add `pages: write`, the action will construct the URL from your repository name (e.g., `https://<owner>.github.io/<repo>/`) which works for most cases.
+
+### How does `keep_reports` work? Do I need my own cleanup code?
+
+No — the action handles cleanup automatically. When the number of report folders exceeds `keep_reports`, the **oldest reports are deleted** before the new one is added. No custom housekeeping code is needed.
+
+### Why is my GitHub Pages URL something like `verbose-robot-pgv5y5j.pages.github.io` instead of `<owner>.github.io/<repo>`?
+
+This happens when your repository is **private**. GitHub assigns a randomized subdomain for private repo GitHub Pages to prevent URL enumeration. This URL is stable for a given repo but differs per repository. You **cannot change it**, but you can use the `report_url` input to override the URL displayed in the action's output:
+
+```yaml
+- uses: PavanMudigonda/html-reporter-github-pages@v1.5.4
+  with:
+    test_results: test-results
+    report_url: https://verbose-robot-pgv5y5j.pages.github.io
+```
+
+### How is the report URL structured?
+
+The full path to a specific report run follows this pattern:
+
+```
+<pages_url>/<subfolder>/<tool_name>/<workflow_name>/<env>/<run_number>/index.html
+```
+
+For example: `https://verbose-robot-pgv5y5j.pages.github.io/docs/cucumber/CucumberBranchRunner/QA/137/index.html`
+
+The action outputs the latest result URL as `LATEST_RUN_GH_PAGES_URL` which you can use in subsequent steps.
