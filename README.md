@@ -234,6 +234,6 @@ The full path to a specific report run follows this pattern:
 <pages_url>/<subfolder>/<tool_name>/<workflow_name>/<env>/<run_number>/index.html
 ```
 
-For example: `https://verbose-robot-pgv5y5j.pages.github.io/docs/cucumber/CucumberBranchRunner/QA/137/index.html`
+For example: `https://blah-blah.pages.github.io/docs/cucumber/CucumberBranchRunner/QA/137/index.html`
 
 The action outputs the latest result URL as `LATEST_RUN_GH_PAGES_URL` which you can use in subsequent steps.
