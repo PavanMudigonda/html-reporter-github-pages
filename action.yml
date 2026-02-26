@@ -136,7 +136,7 @@ runs:
         # Warn about external_repository usage
         if [[ -n "${{ inputs.external_repository }}" ]]; then
           echo "::warning::Using external_repository requires a Personal Access Token (PAT) with 'repo' scope."
-          echo '::warning::Make sure you provide: token: ${{ secrets.GH_PAT }} in your workflow file'
+          echo '::warning::Make sure you provide: token: secrets.YOUR_GITHUB_PAT in your workflow file'
           echo "::warning::The default GITHUB_TOKEN cannot push to external repositories."
         fi
         
@@ -359,9 +359,9 @@ runs:
           COUNT=$(find . -maxdepth 1 -type d -regex '.*/[0-9]+' 2>/dev/null | wc -l)
           echo "count numeric run folders in results-history: ${COUNT}"
           echo "keep reports count ${KEEP_REPORTS}"
-          if (( COUNT >= KEEP_REPORTS )); then
+          if (( COUNT >= $KEEP_REPORTS )); then
             echo "remove old reports"
-            REMOVE_COUNT=$(( COUNT - KEEP_REPORTS + 1 ))
+            REMOVE_COUNT=$(( COUNT - $KEEP_REPORTS + 1 ))
             find . -maxdepth 1 -type d -regex '.*/[0-9]+' -print0 | sort -zn | head -zn "${REMOVE_COUNT}" | xargs -0 rm -rv
             if [ -f index.html ]; then
               echo "remove index.html"
@@ -680,7 +680,7 @@ runs:
             echo "::warning::API call to create GitHub Pages site failed (403 - Insufficient permissions)."
             if [[ "${IS_EXTERNAL}" == "true" ]]; then
               echo "::warning::For external repositories, you must use a Personal Access Token (PAT) with 'repo' and 'pages: write' scopes."
-              echo '::warning::Please provide: token: ${{ secrets.GH_PAT }} in your workflow file'
+              echo '::warning::Please provide: token: secrets.YOUR_GITHUB_PAT in your workflow file'
             else
               echo "::warning::To fix this, add 'pages: write' permission to your workflow, or manually enable GitHub Pages in Settings -> Pages."
             fi
