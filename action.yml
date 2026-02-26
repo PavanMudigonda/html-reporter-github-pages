@@ -359,9 +359,10 @@ runs:
           COUNT=$(find . -maxdepth 1 -type d -regex '.*/[0-9]+' 2>/dev/null | wc -l)
           echo "count numeric run folders in results-history: ${COUNT}"
           echo "keep reports count ${KEEP_REPORTS}"
-          if (( COUNT > KEEP_REPORTS )); then
+          if (( COUNT >= KEEP_REPORTS )); then
             echo "remove old reports"
-            find . -maxdepth 1 -type d -regex '.*/[0-9]+' -print0 | sort -zn | head -zn -"${KEEP_REPORTS}" | xargs -0 rm -rv
+            REMOVE_COUNT=$(( COUNT - KEEP_REPORTS + 1 ))
+            find . -maxdepth 1 -type d -regex '.*/[0-9]+' -print0 | sort -zn | head -zn "${REMOVE_COUNT}" | xargs -0 rm -rv
             if [ -f index.html ]; then
               echo "remove index.html"
               rm -rv index.html
@@ -423,18 +424,10 @@ runs:
         fi;
         if [[ "${TOOL_NAME}" != "" ]]; then
             GH_PAGES="${GH_PAGES}/${TOOL_NAME}"
-            if [[ "${SUBFOLDER}" != "" ]]; then
-                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${SUBFOLDER}/${TOOL_NAME}"
-            else
-                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${TOOL_NAME}"
-            fi
+            GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${TOOL_NAME}"
             mkdir -p "${GH_PAGES}"
         else
-            if [[ "${SUBFOLDER}" != "" ]]; then
-                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}/${SUBFOLDER}"
-            else
-                GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}"
-            fi
+            GITHUB_PAGES_WEBSITE_URL="${REPORT_URL}"
         fi;
         if [[ "${WORKFLOW_NAME}" != "" ]]; then
             GH_PAGES="${GH_PAGES}/${WORKFLOW_NAME}"
