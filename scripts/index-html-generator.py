@@ -390,7 +390,19 @@ def process_dir(top_dir, opts):
                 size_pretty = pretty_size(size_bytes)
 
             if entry.is_dir() or entry.is_file():
-                last_modified = datetime.datetime.fromtimestamp(entry.stat().st_mtime).replace(microsecond=0)
+                # For directories, prefer the .created_at sentinel file written by
+                # the action on first deploy.  This survives force-orphan redeployments
+                # which reset filesystem mtimes of all existing folders.
+                created_at_file = entry / '.created_at'
+                if entry.is_dir() and created_at_file.exists():
+                    try:
+                        ts = created_at_file.read_text(encoding='utf-8').strip()
+                        ts = ts[:-1] if ts.endswith('Z') else ts
+                        last_modified = datetime.datetime.fromisoformat(ts).replace(microsecond=0)
+                    except (ValueError, OSError, UnicodeDecodeError):
+                        last_modified = datetime.datetime.fromtimestamp(entry.stat().st_mtime).replace(microsecond=0)
+                else:
+                    last_modified = datetime.datetime.fromtimestamp(entry.stat().st_mtime).replace(microsecond=0)
                 last_modified_iso = last_modified.isoformat()
                 last_modified_human_readable = last_modified.strftime("%c")
 
