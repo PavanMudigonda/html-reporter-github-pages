@@ -512,13 +512,16 @@ runs:
         }
         #-------------------------------------------------------------------
         generate_index_html_func () {
-          # Install Jinja2 if not already present.
-          # Try plain install first; fall back to --break-system-packages for
-          # PEP 668 "externally managed" environments (Ubuntu 22.04+ runners).
-          python3 -c "import jinja2" 2>/dev/null \
-            || python3 -m pip install --quiet jinja2 2>/dev/null \
-            || python3 -m pip install --quiet --break-system-packages jinja2
-          python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+          # Prefer uv (pre-installed on ubuntu-latest runners, zero PEP-668 issues).
+          # Fall back to a throwaway venv so we never touch the system Python.
+          if command -v uv &>/dev/null; then
+            uv run --with jinja2 python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+          else
+            _J2_VENV="$(mktemp -d)/.venv"
+            python3 -m venv "${_J2_VENV}"
+            "${_J2_VENV}/bin/pip" install --quiet jinja2
+            "${_J2_VENV}/bin/python3" "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+          fi
           echo "Completed index html generation"
         }
         #-------------------------------------------------------------------
