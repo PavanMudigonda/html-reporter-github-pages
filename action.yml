@@ -468,6 +468,13 @@ runs:
         #-------------------------------------------------------------------
         copy_current_results_func () {
           mkdir -p "./${GH_PAGES}/${GITHUB_RUN_NUM}"
+          # Preserve the original creation time for this run directory so the
+          # index listing always shows when a run first happened, even after
+          # force-orphan re-deployments reset filesystem mtimes.
+          CREATED_AT_FILE="./${GH_PAGES}/${GITHUB_RUN_NUM}/.created_at"
+          if [ ! -f "${CREATED_AT_FILE}" ]; then
+            date -u +"%Y-%m-%dT%H:%M:%SZ" > "${CREATED_AT_FILE}"
+          fi
           # If we are not dealing with Allure Reports then copy the test results
           if [[ "${ALLURE_FLAG}" != 'true' ]]; then
             # Check if source directory exists and has content before copying
