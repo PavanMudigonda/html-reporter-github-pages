@@ -1,0 +1,56 @@
+<testsuites id="" name="" tests="1" failures="1" skipped="0" errors="0" time="37.419">
+<testsuite name="salesforce.spec.ts" timestamp="1653834510395" hostname="" tests="1" failures="1" skipped="0" time="36.835" errors="0">
+<testcase name="test" classname="[Chrome] › salesforce.spec.ts:3:1 › test" time="36.835">
+<failure message="salesforce.spec.ts:3:1 test" type="FAILURE">
+  [Chrome] › salesforce.spec.ts:3:1 › test =========================================================
+
+    Timeout of 30000ms exceeded.
+
+    page.waitForNavigation: Navigation failed because page was closed!
+    =========================== logs ===========================
+    waiting for navigation to "https://personal166.lightning.force.com/lightning/o/Lead/list?filterName=Recent" until "load"
+    ============================================================
+
+      36 |   // Click text=Leads
+      37 |   await Promise.all([
+    > 38 |     page.waitForNavigation({ url: 'https://personal166.lightning.force.com/lightning/o/Lead/list?filterName=Recent' }),
+         |          ^
+      39 |     page.click('text=Leads'),
+      40 |   ]);
+      41 |
+
+        at /Users/PavanMudigonda/onedrive/playwright/tests/salesforce.spec.ts:38:10
+
+    Pending operations:
+      - page.click at tests/salesforce.spec.ts:39:10
+
+
+    attachment #1: video (video/webm) --------------------------------------------------------------
+    test-results/salesforce-test-Chrome/video.webm
+    ------------------------------------------------------------------------------------------------
+
+    attachment #2: trace (application/zip) ---------------------------------------------------------
+    test-results/salesforce-test-Chrome/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/salesforce-test-Chrome/trace.zip
+
+    ------------------------------------------------------------------------------------------------
+
+    attachment #3: screenshot (image/png) ----------------------------------------------------------
+    test-results/salesforce-test-Chrome/test-failed-1.png
+    ------------------------------------------------------------------------------------------------
+
+</failure>
+<system-out>
+
+[[ATTACHMENT|../test-results/salesforce-test-Chrome/video.webm]]
+
+[[ATTACHMENT|../test-results/salesforce-test-Chrome/trace.zip]]
+
+[[ATTACHMENT|../test-results/salesforce-test-Chrome/test-failed-1.png]]
+
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

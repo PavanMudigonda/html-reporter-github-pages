@@ -1,0 +1,133 @@
+{
+  "config": {
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/Users/PavanMudigonda/onedrive/playwright/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "name": "Chrome",
+        "testDir": "/Users/PavanMudigonda/onedrive/playwright/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "tests/sales*.spec.ts"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "reporter": [
+      [
+        "dot",
+        null
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/test-result.xml"
+        }
+      ],
+      [
+        "github",
+        null
+      ],
+      [
+        "dot",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/test-result.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "html-report"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "rootDir": "/Users/PavanMudigonda/onedrive/playwright/tests",
+    "quiet": false,
+    "shard": null,
+    "updateSnapshots": "missing",
+    "version": "1.23.0-alpha-may-28-2022",
+    "workers": 4,
+    "webServer": null,
+    "_globalOutputDir": "/Users/PavanMudigonda/onedrive/playwright/test-results",
+    "_configDir": "/Users/PavanMudigonda/onedrive/playwright",
+    "_testGroupsCount": 1
+  },
+  "suites": [
+    {
+      "title": "salesforce.spec.ts",
+      "file": "salesforce.spec.ts",
+      "line": 0,
+      "column": 0,
+      "specs": [
+        {
+          "title": "test",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectName": "Chrome",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "status": "timedOut",
+                  "duration": 36835,
+                  "error": {
+                    "message": "\u001b[31mTimeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "attachments": [
+                    {
+                      "name": "video",
+                      "contentType": "video/webm",
+                      "path": "/Users/PavanMudigonda/onedrive/playwright/test-results/salesforce-test-Chrome/video.webm"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/Users/PavanMudigonda/onedrive/playwright/test-results/salesforce-test-Chrome/trace.zip"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/Users/PavanMudigonda/onedrive/playwright/test-results/salesforce-test-Chrome/test-failed-1.png"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "file": "salesforce.spec.ts",
+          "line": 3,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": []
+}
