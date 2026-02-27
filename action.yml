@@ -521,11 +521,11 @@ runs:
         echo "GITHUB_PAGES_WEBSITE_URL=${GITHUB_PAGES_WEBSITE_URL}" >> $GITHUB_ENV
         echo "GITHUB_PAGES_WEBSITE_URL=${GITHUB_PAGES_WEBSITE_URL}" >> $GITHUB_OUTPUT
         #-------------------------------------------------------------------
-        echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_OUTPUT
+        echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/" >> $GITHUB_OUTPUT
         # Publish Job Summary
         if [[ "${USE_ACTIONS_SUMMARY}" != 'false' ]]; then
           echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
-          echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/index.html" >> $GITHUB_STEP_SUMMARY
+          echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/" >> $GITHUB_STEP_SUMMARY
         fi;
         #-------------------------------------------------------------------
         # First Run Delete Function
