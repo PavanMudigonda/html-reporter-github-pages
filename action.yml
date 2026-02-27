@@ -512,26 +512,23 @@ runs:
         }
         #-------------------------------------------------------------------
         generate_index_html_func () {
-          # Resolve the Python interpreter to use for running the index script.
-          # Tries four strategies in order, stopping at the first that works:
-          #  1. jinja2 already importable  → use python3 directly (fastest)
-          #  2. uv available               → uv run --with jinja2 (GitHub-hosted runners)
-          #  3. python3 -m venv available  → throwaway venv + pip install (most self-hosted)
-          #  4. pip --break-system-packages → last resort (minimal/legacy images)
-          _run_index () { python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"; }
+          # Strategy: always use a throwaway venv so we never touch the system Python
+          # and avoid all PEP-668 / externally-managed-environment issues.
+          # If jinja2 is already importable (e.g. user pre-installed it) skip the venv.
+          # uv is used to speed up the pip install when available, but is NOT required.
           if python3 -c "import jinja2" 2>/dev/null; then
-            _run_index
-          elif command -v uv &>/dev/null; then
-            uv run --quiet --with jinja2 python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
-          elif python3 -m venv --help &>/dev/null; then
-            _J2_VENV="$(mktemp -d)/.venv"
-            python3 -m venv "${_J2_VENV}"
-            "${_J2_VENV}/bin/pip" install --quiet jinja2
-            "${_J2_VENV}/bin/python3" "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+            echo "jinja2 already available, skipping install"
+            python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
           else
-            echo "::warning::Falling back to pip --break-system-packages to install jinja2"
-            python3 -m pip install --quiet --break-system-packages jinja2
-            _run_index
+            _J2_VENV="$(mktemp -d)/j2venv"
+            echo "Creating venv at ${_J2_VENV} for jinja2..."
+            python3 -m venv "${_J2_VENV}" || { echo "::error::python3 -m venv failed — ensure python3-venv is installed on self-hosted runners"; return 1; }
+            if command -v uv &>/dev/null; then
+              uv pip install --python "${_J2_VENV}/bin/python3" --quiet jinja2
+            else
+              "${_J2_VENV}/bin/pip" install --quiet jinja2
+            fi
+            "${_J2_VENV}/bin/python3" "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
           fi
           echo "Completed index html generation"
         }
