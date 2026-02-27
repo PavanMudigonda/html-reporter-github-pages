@@ -2,6 +2,7 @@
 
 import argparse
 import datetime
+import json
 import os
 import sys
 from pathlib import Path
@@ -84,6 +85,17 @@ def process_dir(top_dir, opts):
               f'{path_top_dir.absolute()} — existing index.html is a user report, not a generated navigation file.')
         return
 
+    # Load run-timestamps.json manifest if present; maps run-number → ISO timestamp.
+    # Written/appended by the action on each run so timestamps survive force-orphan
+    # redeployments that otherwise reset all filesystem mtimes.
+    run_timestamps: dict = {}
+    ts_manifest = path_top_dir / 'run-timestamps.json'
+    if ts_manifest.exists():
+        try:
+            run_timestamps = json.loads(ts_manifest.read_text(encoding='utf-8'))
+        except (ValueError, OSError):
+            pass
+
     # sort dirs first
     sorted_entries = sorted(path_top_dir.glob(glob_patt), key=lambda p: (p.is_file(), p.name), reverse=opts.reverse)
     entries: list = []
@@ -121,19 +133,31 @@ def process_dir(top_dir, opts):
                 size_pretty = pretty_size(size_bytes)
 
             if entry.is_dir() or entry.is_file():
-                # For directories, prefer the .created_at sentinel file written by
-                # the action on first deploy.  This survives force-orphan redeployments
-                # which reset filesystem mtimes of all existing folders.
+                # Resolve timestamp with a three-level priority:
+                #  1. run-timestamps.json manifest (shared, appended every run)
+                #  2. per-folder .created_at sentinel (written on first deploy)
+                #  3. stat().st_mtime fallback (unreliable after force-orphan)
                 created_at_file = entry / '.created_at'
-                if entry.is_dir() and created_at_file.exists():
+                ts_str = None
+                if entry.is_dir():
+                    ts_str = run_timestamps.get(entry.name)
+                if not ts_str and entry.is_dir() and created_at_file.exists():
                     try:
-                        ts = created_at_file.read_text(encoding='utf-8').strip()
-                        ts = ts[:-1] if ts.endswith('Z') else ts
-                        last_modified = datetime.datetime.fromisoformat(ts).replace(microsecond=0)
-                    except (ValueError, OSError, UnicodeDecodeError):
-                        last_modified = datetime.datetime.fromtimestamp(entry.stat().st_mtime).replace(microsecond=0)
+                        ts_str = created_at_file.read_text(encoding='utf-8').strip()
+                    except (OSError, UnicodeDecodeError):
+                        pass
+                if ts_str:
+                    try:
+                        # Normalise 'Z' suffix → '+00:00' so fromisoformat works on
+                        # Python <3.11 and JS new Date() correctly treats value as UTC.
+                        ts_norm = ts_str.replace('Z', '+00:00')
+                        last_modified = datetime.datetime.fromisoformat(ts_norm).replace(microsecond=0)
+                    except ValueError:
+                        last_modified = datetime.datetime.fromtimestamp(
+                            entry.stat().st_mtime, tz=datetime.timezone.utc).replace(microsecond=0)
                 else:
-                    last_modified = datetime.datetime.fromtimestamp(entry.stat().st_mtime).replace(microsecond=0)
+                    last_modified = datetime.datetime.fromtimestamp(
+                        entry.stat().st_mtime, tz=datetime.timezone.utc).replace(microsecond=0)
                 last_modified_iso = last_modified.isoformat()
                 last_modified_human = last_modified.strftime("%c")
 
