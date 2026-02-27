@@ -37,7 +37,7 @@ LEGACY_MARKERS = (
 MARKER_READ_BYTES = 2048
 
 # Entry name prefixes that are excluded from the listing unless --include-hidden is set.
-EXCLUDED_PREFIXES = ('last-history', 'gh-pages', 'favicon.ico', 'docs')
+EXCLUDED_PREFIXES = ('last-history', 'gh-pages', 'favicon.ico', 'docs', 'run-timestamps.json')
 
 # Unicode icons for each entry type used in the HTML listing.
 ENTRY_ICONS = {
