@@ -2,3 +2,6 @@
 actionlint
 gh-pages.txt
 *.json
+__pycache__/
+*.pyc
+*.pyo
