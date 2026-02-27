@@ -86,15 +86,19 @@ outputs:
 runs:
   using: 'composite'    
   steps:
+    - name: Install Python
+      uses: actions/setup-python@v6.2.0
+      with:
+        python-version: '3.13' 
     - name: Validate inputs
       shell: bash
       run: |
         set -e
         echo "::group::Validating action inputs"
         
-        # Validate keep_reports is a positive integer
-        if ! [[ "${{ inputs.keep_reports }}" =~ ^[0-9]+$ ]]; then
-          echo "::error::keep_reports must be a positive integer, got: ${{ inputs.keep_reports }}"
+        # Validate keep_reports is a positive integer (minimum 1)
+        if ! [[ "${{ inputs.keep_reports }}" =~ ^[0-9]+$ ]] || [[ "${{ inputs.keep_reports }}" -lt 1 ]]; then
+          echo "::error::keep_reports must be a positive integer (minimum 1), got: ${{ inputs.keep_reports }}"
           exit 1
         fi
         
@@ -327,6 +331,9 @@ runs:
         TEST_RESULTS: "${{ inputs.test_results }}"
         USE_ACTIONS_SUMMARY: "${{ inputs.use_actions_summary }}"
         WORKFLOW_NAME: "${{ inputs.workflow_name }}"
+        GITHUB_SERVER_URL: "${{ github.server_url }}"
+        GITHUB_SHA: "${{ github.sha }}"
+        GITHUB_REF_NAME: "${{ github.head_ref || github.ref_name }}"
       run: |
         set -e
         GH_PAGES_ACTION_HOME="$PWD"
@@ -345,14 +352,7 @@ runs:
         fi;
         #-------------------------------------------------------------------
         # Use single index generator script with order parameter
-        INDEX_SCRIPT_PATH=${{ github.action_path }}/scripts/index-html-generator.py
-        #-------------------------------------------------------------------
-        # Check if its external repo push
-        if [[ ${EXTERNAL_REPO} != '' ]]; then
-          REPOSITORY_OWNER_SLASH_NAME=${EXTERNAL_REPO}
-        elif [[ ${EXTERNAL_REPO} == '' ]]; then
-          REPOSITORY_OWNER_SLASH_NAME=${GITHUB_REPOSITORY}
-        fi;
+        INDEX_SCRIPT_PATH="${{ github.action_path }}/scripts/index-html-generator.py"
         #-------------------------------------------------------------------
         delete_folders_func () {
           # Count only numeric run directories (not index.html, last-history, etc.)
@@ -378,16 +378,14 @@ runs:
         EXTERNAL_REPO_NAME=${EXTERNAL_REPO_OWNER_SLASH_NAME##*/}
         if [[ "${EXTERNAL_REPO_NAME}" == '' ]]; 
         then
-          GH_PAGES_API="/repos/${{ github.repository }}/pages"
+          GH_PAGES_API="/repos/${GITHUB_REPOSITORY}/pages"
         elif [[ "${EXTERNAL_REPO}" != '' ]]
         then
           GH_PAGES_API="/repos/${EXTERNAL_REPO}/pages"
         fi
         gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" ${GH_PAGES_API} > gh-pages.json || true
-        REPORT_URL=${REPORT_URL}
         #-------------------------------------------------------------------
         if [[ ${REPORT_URL} != '' ]]; then
-            REPORT_URL="${REPORT_URL}"
             echo "Replacing github pages url. NEW url ${REPORT_URL}"
         else
             REPORT_URL=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" ${GH_PAGES_API} --jq '.html_url' 2>/dev/null | tr -d '"' | xargs || echo "")
@@ -407,8 +405,8 @@ runs:
               echo "::notice::To get the exact URL, add 'pages: write' to your workflow permissions block."
             fi
             REPORT_URL="${REPORT_URL%/}"
-            echo $REPORT_URL
-            echo REPORT_URL=$REPORT_URL >> $GITHUB_ENV
+            echo "${REPORT_URL}"
+            echo "REPORT_URL=${REPORT_URL}" >> $GITHUB_ENV
             if [[ "${USE_ACTIONS_SUMMARY}" != 'false' ]]; then
               echo "#### GitHub Pages HTML Reports" >> $GITHUB_STEP_SUMMARY
             fi;
@@ -441,25 +439,25 @@ runs:
         fi;
         #-------------------------------------------------------------------        
         create_executor_json_func () {
-          if [ ! -f ${TEST_RESULTS}/executor.json ]; then
+          if [ ! -f "${TEST_RESULTS}/executor.json" ]; then
             #echo "executor.json"
             echo '{"name":"GitHub Actions","type":"github","reportName":"Test Reporting",' > executor.json
             echo "\"url\":\"${GITHUB_PAGES_WEBSITE_URL}\"," >> executor.json # ???
             echo "\"reportUrl\":\"${GITHUB_PAGES_WEBSITE_URL}/${GITHUB_RUN_NUM}/\"," >> executor.json
-            echo "\"buildUrl\":\"https://github.com/${{ github.repository }}/actions/runs/${GITHUB_RUN_ID}\"," >> executor.json
+            echo "\"buildUrl\":\"${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"," >> executor.json
             echo "\"buildName\":\"GitHub Actions Run #${GITHUB_RUN_NUM}\",\"buildOrder\":\"${GITHUB_RUN_NUM}\"}" >> executor.json
 
             mv ./executor.json ${TEST_RESULTS}  
           fi
-          if [ ! -f ${TEST_RESULTS}/environment.properties ]; then
+          if [ ! -f "${TEST_RESULTS}/environment.properties" ]; then
             {
-             echo URL=${GITHUB_PAGES_WEBSITE_URL}
-             echo BUILD_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-             echo GIT_BRANCH=${{ github.head_ref || github.ref_name }}
-             echo GIT_COMMIT_ID=${{ github.sha }}
-             echo GIT_COMMIT_MESSAGE=$(git show -s --format=%s HEAD)
-             echo GIT_COMMIT_AUTHOR_NAME=$(git show -s --format='%ae' HEAD)
-             echo GIT_COMMIT_TIME=$(git show -s --format=%ci HEAD)
+             echo "URL=${GITHUB_PAGES_WEBSITE_URL}"
+             echo "BUILD_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+             echo "GIT_BRANCH=${GITHUB_REF_NAME}"
+             echo "GIT_COMMIT_ID=${GITHUB_SHA}"
+             echo "GIT_COMMIT_MESSAGE=$(git show -s --format=%s HEAD)"
+             echo "GIT_COMMIT_AUTHOR_NAME=$(git show -s --format='%ae' HEAD)"
+             echo "GIT_COMMIT_TIME=$(git show -s --format=%ci HEAD)"
             } >> environment.properties
 
             mv ./environment.properties ${TEST_RESULTS}
@@ -514,6 +512,7 @@ runs:
         }
         #-------------------------------------------------------------------
         generate_index_html_func () {
+          python3 -m pip install --quiet jinja2
           python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
           echo "Completed index html generation"
         }
@@ -528,11 +527,11 @@ runs:
         echo "GITHUB_PAGES_WEBSITE_URL=${GITHUB_PAGES_WEBSITE_URL}" >> $GITHUB_ENV
         echo "GITHUB_PAGES_WEBSITE_URL=${GITHUB_PAGES_WEBSITE_URL}" >> $GITHUB_OUTPUT
         #-------------------------------------------------------------------
-        echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/" >> $GITHUB_OUTPUT
+        echo "LATEST_RUN_GH_PAGES_URL=${GITHUB_PAGES_WEBSITE_URL}/${GITHUB_RUN_NUM}/" >> $GITHUB_OUTPUT
         # Publish Job Summary
         if [[ "${USE_ACTIONS_SUMMARY}" != 'false' ]]; then
           echo "GH Pages History URL: ${REPORT_URL}" >> $GITHUB_STEP_SUMMARY
-          echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${{ github.run_number }}/" >> $GITHUB_STEP_SUMMARY
+          echo "GH Pages Latest Result URL: ${GITHUB_PAGES_WEBSITE_URL}/${GITHUB_RUN_NUM}/" >> $GITHUB_STEP_SUMMARY
         fi;
         #-------------------------------------------------------------------
         # First Run Delete Function
@@ -584,11 +583,13 @@ runs:
         # Allure Report Generation
         if [[ "${ALLURE_FLAG}" == 'true' ]]; then
           cd "$GH_PAGES_ACTION_HOME"
-          npm -g install allure-commandline
+          if ! command -v allure &> /dev/null; then
+            npm -g install allure-commandline
+          fi
           npx allure --version
           # cd "${GH_PAGES_ACTION_HOME}/${TEST_RESULTS}"
           create_executor_json_func 
-          npx allure generate ${TEST_RESULTS} -o allure-report --clean
+          npx allure generate "${TEST_RESULTS}" -o allure-report --clean
           # finally copy allure report
           if [ -d allure-report ] && [ "$(ls -A allure-report 2>/dev/null)" ]; then
             cp -r allure-report/. "${GH_PAGES}/${GITHUB_RUN_NUM}"
