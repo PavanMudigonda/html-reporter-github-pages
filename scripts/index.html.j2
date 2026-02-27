@@ -6,6 +6,7 @@
   <title>{{ folder_name }} &#8212; Test Reports</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>(function(){var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
   <style>
     :root {
       --bg:#f0f4f8; --surface:#fff; --ga:#4f46e5; --gb:#7c3aed;
@@ -15,12 +16,18 @@
       --r:12px; --sh:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
     }
     @media(prefers-color-scheme:dark){
-      :root{
+      :root:not([data-theme="light"]){
         --bg:#0f172a; --surface:#1e293b; --ga:#3730a3; --gb:#6d28d9;
         --bdr:#334155; --tx:#e2e8f0; --mu:#94a3b8;
         --lk:#818cf8; --lkh:#a78bfa; --rh:#1e1b4b;
         --bbg:#1e1b4b; --bfg:#a5b4fc; --ibg:#0f172a;
       }
+    }
+    [data-theme="dark"]{
+      --bg:#0f172a; --surface:#1e293b; --ga:#3730a3; --gb:#6d28d9;
+      --bdr:#334155; --tx:#e2e8f0; --mu:#94a3b8;
+      --lk:#818cf8; --lkh:#a78bfa; --rh:#1e1b4b;
+      --bbg:#1e1b4b; --bfg:#a5b4fc; --ibg:#0f172a;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{
@@ -53,6 +60,23 @@
     }
     .nbtn:hover{background:rgba(255,255,255,.28)}
     .nbtn.disabled{opacity:.3;pointer-events:none;cursor:default}
+    .thmbtn{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:5px 10px;border-radius:6px;
+      background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);
+      cursor:pointer;transition:background .15s;flex-shrink:0;
+      color:#fff;font-size:.75rem;font-weight:600;
+    }
+    .thmbtn:hover{background:rgba(255,255,255,.28)}
+    .thmbtn .thi{font-size:1rem;line-height:1}
+    .thmbtn .thlbl{opacity:.8;letter-spacing:.01em}
+    .thmbtn .thkbd{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:1px 5px;border-radius:4px;font-size:.65rem;font-weight:700;
+      background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+      letter-spacing:.05em;
+    }
+    @media(max-width:600px){.thmbtn .thlbl,.thmbtn .thkbd{display:none}}
     .bar{
       display:flex;align-items:center;gap:12px;
       padding:13px 5%;background:var(--surface);
@@ -127,6 +151,11 @@
         <a class="nbtn" id="btn-prev" href="#" title="Previous run">&#8592; Prev</a>
         <a class="nbtn" id="btn-next" href="#" title="Next run">Next &#8594;</a>
         <a class="nbtn" id="btn-latest" href="#" title="Jump to latest run">Latest &#9654;</a>
+        <button class="thmbtn" id="btn-theme" title="Toggle dark/light mode (shortcut: T)" aria-label="Toggle color theme">
+          <span class="thi">🌙</span>
+          <span class="thlbl">Theme</span>
+          <span class="thkbd">T</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -165,6 +194,33 @@
   <p class="nores">No matching entries found.</p>
   <script>
   (function(){
+    // ── Theme toggle ─────────────────────────────────────────────────────
+    (function(){
+      var btn=document.getElementById('btn-theme');
+      var btnIco=btn?btn.querySelector('.thi'):null;
+      function applyTheme(dark){
+        document.documentElement.setAttribute('data-theme',dark?'dark':'light');
+        if(btnIco)btnIco.textContent=dark?'☀️':'🌙';
+        if(btn)btn.title=(dark?'Switch to light mode':'Switch to dark mode')+' (shortcut: T)';
+      }
+      var sys=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches;
+      var saved=localStorage.getItem('theme');
+      var isDark=saved==='dark'||(saved===null&&sys);
+      applyTheme(isDark);
+      function toggleTheme(){
+        var next=document.documentElement.getAttribute('data-theme')!=='dark';
+        applyTheme(next);
+        localStorage.setItem('theme',next?'dark':'light');
+      }
+      if(btn){btn.addEventListener('click',toggleTheme);}
+      document.addEventListener('keydown',function(e){
+        if(e.key==='t'||e.key==='T'){
+          var tag=(e.target||{}).tagName||'';
+          if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+          toggleTheme();
+        }
+      });
+    })();
     function relTime(iso){
       if(!iso)return '';
       var d=new Date(iso),now=new Date();
