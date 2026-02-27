@@ -511,25 +511,28 @@ runs:
           fi;
         }
         #-------------------------------------------------------------------
-        generate_index_html_func () {
-          # Strategy: always use a throwaway venv so we never touch the system Python
-          # and avoid all PEP-668 / externally-managed-environment issues.
-          # If jinja2 is already importable (e.g. user pre-installed it) skip the venv.
-          # uv is used to speed up the pip install when available, but is NOT required.
-          if python3 -c "import jinja2" 2>/dev/null; then
-            echo "jinja2 already available, skipping install"
-            python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+        # Resolve the Python interpreter + jinja2 once, reuse for all index generation calls.
+        # Strategy: venv in /tmp so we never touch system Python (avoids PEP-668 on all runners).
+        # Skip the install if jinja2 is already importable (self-hosted runners that pre-install it).
+        if python3 -c "import jinja2" 2>/dev/null; then
+          _INDEX_PY="python3"
+          echo "jinja2 already available"
+        else
+          _J2_VENV="$(mktemp -d)/j2venv"
+          echo "Creating venv at ${_J2_VENV} for jinja2..."
+          python3 -m venv "${_J2_VENV}" || { echo "::error::python3 -m venv failed — ensure python3-venv is installed on self-hosted runners"; exit 1; }
+          if command -v uv &>/dev/null; then
+            uv pip install --python "${_J2_VENV}/bin/python3" --quiet jinja2
           else
-            _J2_VENV="$(mktemp -d)/j2venv"
-            echo "Creating venv at ${_J2_VENV} for jinja2..."
-            python3 -m venv "${_J2_VENV}" || { echo "::error::python3 -m venv failed — ensure python3-venv is installed on self-hosted runners"; return 1; }
-            if command -v uv &>/dev/null; then
-              uv pip install --python "${_J2_VENV}/bin/python3" --quiet jinja2
-            else
-              "${_J2_VENV}/bin/pip" install --quiet jinja2
-            fi
-            "${_J2_VENV}/bin/python3" "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+            "${_J2_VENV}/bin/pip" install --quiet jinja2
           fi
+          _INDEX_PY="${_J2_VENV}/bin/python3"
+        fi
+        generate_index_html_func () {
+          # --force: parent-level nav dirs should always be overwritten.
+          # Any existing index.html there is either already a nav page or
+          # a leftover from an old version of the action — both safe to replace.
+          "${_INDEX_PY}" "${INDEX_SCRIPT_PATH}" --order "${ORDER}" --force
           echo "Completed index html generation"
         }
         #-------------------------------------------------------------------
