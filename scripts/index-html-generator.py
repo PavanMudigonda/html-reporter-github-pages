@@ -122,7 +122,7 @@ def process_dir(top_dir, opts):
         if opts.verbose:
             print(f'{entry.absolute()}')
 
-        size_bytes = -1  # is a folder
+        size_bytes = -1
         size_pretty = None
         last_modified = None
         last_modified_human = ''
@@ -130,6 +130,9 @@ def process_dir(top_dir, opts):
         try:
             if entry.is_file():
                 size_bytes = entry.stat().st_size
+                size_pretty = pretty_size(size_bytes)
+            elif entry.is_dir() and not entry.is_symlink():
+                size_bytes = dir_size(entry)
                 size_pretty = pretty_size(size_bytes)
 
             if entry.is_dir() or entry.is_file():
@@ -224,6 +227,21 @@ UNITS_MAPPING = [
     (1024 ** 1, ' KB'),
     (1024 ** 0, (' byte', ' bytes')),
 ]
+
+
+def dir_size(path):
+    """Return total byte size of all files inside *path* recursively."""
+    total = 0
+    try:
+        for p in Path(path).rglob('*'):
+            if p.is_file() and not p.is_symlink():
+                try:
+                    total += p.stat().st_size
+                except OSError:
+                    pass
+    except OSError:
+        pass
+    return total
 
 
 def pretty_size(bytes, units=UNITS_MAPPING):
