@@ -478,23 +478,7 @@ runs:
           # force-orphan redeployments (unlike filesystem mtimes).
           _RUN_TS="$(cat "${CREATED_AT_FILE}")"
           export _RUN_TS GH_PAGES GITHUB_RUN_NUM
-          python3 - <<'_PYEOF'
-import json, os, pathlib
-manifest = pathlib.Path(os.environ['GH_PAGES']) / 'run-timestamps.json'
-data = json.loads(manifest.read_text()) if manifest.exists() else {}
-for d in sorted(manifest.parent.iterdir()):
-    if d.is_dir() and d.name.isdigit() and d.name not in data:
-        ca = d / '.created_at'
-        if ca.exists():
-            try:
-                data[d.name] = ca.read_text(encoding='utf-8').strip()
-            except Exception:
-                pass
-if os.environ['GITHUB_RUN_NUM'] not in data:
-    data[os.environ['GITHUB_RUN_NUM']] = os.environ['_RUN_TS']
-keys = sorted(data.keys(), key=lambda k: (0, int(k)) if k.isdigit() else (1, k))
-manifest.write_text(json.dumps({k: data[k] for k in keys}, indent=2) + '\n')
-_PYEOF
+          python3 "${GITHUB_ACTION_PATH}/scripts/update_timestamps.py"
           # If we are not dealing with Allure Reports then copy the test results
           if [[ "${ALLURE_FLAG}" != 'true' ]]; then
             # Check if source directory exists and has content before copying
