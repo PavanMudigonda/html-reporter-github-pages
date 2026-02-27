@@ -21,7 +21,7 @@ jobs:
           node-version: lts/*
           
       - name: GH Pages Push - SAME REPO
-        uses: PavanMudigonda/html-reporter-github-pages@v1.5.19
+        uses: PavanMudigonda/html-reporter-github-pages@v1.5.20
         with:
           test_results: test-results
           keep_reports: 20

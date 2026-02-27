@@ -167,16 +167,17 @@
   (function(){
     function relTime(iso){
       if(!iso)return '';
-      var d=new Date(iso),diff=Date.now()-d;
-      if(isNaN(diff))return '';
-      var s=diff/1e3,m=s/60,h=m/60,dy=h/24;
+      var d=new Date(iso),now=new Date();
+      if(isNaN(d.getTime()))return '';
+      // Same calendar day → relative; any earlier day → exact date
+      var sameDay=d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+      if(!sameDay){
+        return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+      }
+      var diff=Date.now()-d,s=diff/1e3,m=s/60,h=m/60;
       if(s<60) return 'just now';
       if(m<60) return Math.round(m)+'m ago';
-      if(h<24) return Math.round(h)+'h ago';
-      if(dy<7) return Math.round(dy)+'d ago';
-      if(dy<30)return Math.round(dy/7)+'w ago';
-      if(dy<365)return Math.round(dy/30.4)+'mo ago';
-      return Math.round(dy/365.25)+'y ago';
+      return Math.round(h)+'h ago';
     }
     // ── Home / Prev / Next / Latest navigation ──────────────────────────
     (function(){
