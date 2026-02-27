@@ -512,15 +512,26 @@ runs:
         }
         #-------------------------------------------------------------------
         generate_index_html_func () {
-          # Prefer uv (pre-installed on ubuntu-latest runners, zero PEP-668 issues).
-          # Fall back to a throwaway venv so we never touch the system Python.
-          if command -v uv &>/dev/null; then
-            uv run --with jinja2 python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
-          else
+          # Resolve the Python interpreter to use for running the index script.
+          # Tries four strategies in order, stopping at the first that works:
+          #  1. jinja2 already importable  → use python3 directly (fastest)
+          #  2. uv available               → uv run --with jinja2 (GitHub-hosted runners)
+          #  3. python3 -m venv available  → throwaway venv + pip install (most self-hosted)
+          #  4. pip --break-system-packages → last resort (minimal/legacy images)
+          _run_index () { python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"; }
+          if python3 -c "import jinja2" 2>/dev/null; then
+            _run_index
+          elif command -v uv &>/dev/null; then
+            uv run --quiet --with jinja2 python3 "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+          elif python3 -m venv --help &>/dev/null; then
             _J2_VENV="$(mktemp -d)/.venv"
             python3 -m venv "${_J2_VENV}"
             "${_J2_VENV}/bin/pip" install --quiet jinja2
             "${_J2_VENV}/bin/python3" "${INDEX_SCRIPT_PATH}" --order "${ORDER}"
+          else
+            echo "::warning::Falling back to pip --break-system-packages to install jinja2"
+            python3 -m pip install --quiet --break-system-packages jinja2
+            _run_index
           fi
           echo "Completed index html generation"
         }
