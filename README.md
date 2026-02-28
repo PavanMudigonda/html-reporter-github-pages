@@ -155,14 +155,26 @@ jobs:
 
 ## Demo https://pavanmudigonda.github.io/html-reporter-github-pages/
 
-<img width="1397" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/ca3af1f9-9134-4bb3-895c-b7ee4f6009b7">
-<img width="1359" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/a525e133-9cd4-483f-aafb-3890121d7840">
-<img width="1389" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/b48061c7-de68-4526-81d2-45cd031f8380">
-<img width="1413" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/36a20555-a154-4856-a117-6eff9c92d89c">
-<img width="1391" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/a577a6fd-71f0-47df-8754-90c1c7a2d698">
-<img width="1412" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/2213758d-9b1f-4792-8bbd-5456eed87b5e">
-<img width="1365" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/ea45736f-373f-4875-bcf7-bf6197b1e579">
-<img width="1195" alt="image" src="https://github.com/PavanMudigonda/html-reporter-github-pages/assets/29324338/71e7c6d3-d695-4e34-aba1-36d7b05f0922">
+
+<img width="1512" height="519" alt="image" src="https://github.com/user-attachments/assets/063f6d4c-1ccb-4175-82e5-091c604c94ef" />
+<img width="1473" height="527" alt="image" src="https://github.com/user-attachments/assets/3cfe3088-4d01-4328-a024-079bdd753bc8" />
+<img width="1460" height="410" alt="image" src="https://github.com/user-attachments/assets/39995d8e-33d9-41c4-af48-c41a43c696ab" />
+<img width="1453" height="910" alt="image" src="https://github.com/user-attachments/assets/aa85ac75-e1df-4e08-a5ab-bc1fae7c5ab3" />
+<img width="1456" height="347" alt="image" src="https://github.com/user-attachments/assets/039dea37-df8e-4032-9c9f-eb11373af559" />
+<img width="1408" height="904" alt="image" src="https://github.com/user-attachments/assets/3399cf75-83cf-41bc-b4d0-936e2ca37039" />
+<img width="1291" height="910" alt="image" src="https://github.com/user-attachments/assets/9cc156d3-674d-4574-8eab-d403d15e9f3d" />
+<img width="1505" height="773" alt="image" src="https://github.com/user-attachments/assets/b5fe5e5d-2a1f-45db-9c48-34ea44387e24" />
+
+
+
+
+
+
+
+
+
+
+
 
 ## Inputs
 
